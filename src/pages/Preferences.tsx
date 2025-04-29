@@ -40,7 +40,7 @@ export default function Preferences() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
             <img 
-              src="/lovable-uploads/0aad9252-67e2-4a84-8264-5194b62b20da.png" 
+              src="/uploads/logo.jpeg" 
               alt="CalRoute Logo" 
               className="w-10 h-10 mr-3" 
             />

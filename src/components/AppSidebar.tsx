@@ -31,7 +31,7 @@ export function AppSidebar() {
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center">
           <img 
-            src="/lovable-uploads/0aad9252-67e2-4a84-8264-5194b62b20da.png" 
+            src="/uploads/logo.jpeg" 
             alt="CalRoute Logo" 
             className="w-8 h-8 mr-2" 
           />
