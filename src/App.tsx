@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import Calendar from './pages/Calendar';
 import TodoList from './pages/TodoList';
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +27,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route 
               path="/preferences" 
