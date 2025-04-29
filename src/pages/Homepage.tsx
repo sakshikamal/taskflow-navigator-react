@@ -23,16 +23,16 @@ export default function Homepage() {
 
   const [routes] = useState({
     coordinates: [
-      [-122.4194, 37.7749],
-      [-122.4099, 37.7850],
-      [-122.4150, 37.7900],
-      [-122.4250, 37.7800],
+      [-122.4194, 37.7749] as [number, number],
+      [-122.4099, 37.7850] as [number, number],
+      [-122.4150, 37.7900] as [number, number],
+      [-122.4250, 37.7800] as [number, number],
     ],
     locations: [
-      { name: 'Start', coordinates: [-122.4194, 37.7749] },
-      { name: 'Grocery Store', coordinates: [-122.4099, 37.7850] },
-      { name: 'Class', coordinates: [-122.4150, 37.7900] },
-      { name: 'Home', coordinates: [-122.4250, 37.7800] },
+      { name: 'Start', coordinates: [-122.4194, 37.7749] as [number, number] },
+      { name: 'Grocery Store', coordinates: [-122.4099, 37.7850] as [number, number] },
+      { name: 'Class', coordinates: [-122.4150, 37.7900] as [number, number] },
+      { name: 'Home', coordinates: [-122.4250, 37.7800] as [number, number] },
     ]
   });
 

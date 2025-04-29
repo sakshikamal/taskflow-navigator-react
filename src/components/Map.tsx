@@ -9,7 +9,7 @@ const MAPBOX_TOKEN = 'YOUR_MAPBOX_TOKEN_HERE';
 
 interface MapProps {
   routes?: {
-    coordinates: [number, number][];
+    coordinates: [number, number][]; // This ensures each coordinate is a tuple with exactly two numbers
     locations: { name: string; coordinates: [number, number] }[];
   };
 }
