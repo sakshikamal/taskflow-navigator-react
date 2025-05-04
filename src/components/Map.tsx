@@ -1,5 +1,14 @@
+
 // src/components/Map.tsx
 import React, { useEffect, useRef } from 'react';
+
+// Extend Window interface to include Google Maps initialization
+declare global {
+  interface Window {
+    google: any;
+    initMap: () => void;
+  }
+}
 
 // Hardcoded coordinates and locations
 const orderedLocations = [
@@ -11,7 +20,15 @@ const orderedLocations = [
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyC_Dz0XtugoW2odkRb-QGaMT96bA0y9YJs';  // Replace with your Google Maps API key
 
-export default function Map() {
+interface MapProps {
+  // Make routes prop optional so it can work with or without routes
+  routes?: {
+    coordinates: [number, number][];
+    locations: { name: string; coordinates: [number, number] }[];
+  };
+}
+
+export default function Map({ routes }: MapProps = {}) {
   const mapContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,13 +43,13 @@ export default function Map() {
 
     // Map initialization function
     window.initMap = () => {
-      const map = new google.maps.Map(mapContainer.current!, {
+      const map = new window.google.maps.Map(mapContainer.current!, {
         zoom: 12,
         center: orderedLocations[0], // Center map at the first location (Home)
       });
 
-      const directionsService = new google.maps.DirectionsService();
-      const directionsRenderer = new google.maps.DirectionsRenderer({ map });
+      const directionsService = new window.google.maps.DirectionsService();
+      const directionsRenderer = new window.google.maps.DirectionsRenderer({ map });
 
       const origin = orderedLocations[0];
       const destination = orderedLocations[orderedLocations.length - 1];
@@ -48,7 +65,7 @@ export default function Map() {
           destination: destination,
           waypoints: waypoints,
           optimizeWaypoints: false, // Already optimized via backend or manually
-          travelMode: google.maps.TravelMode.DRIVING,
+          travelMode: window.google.maps.TravelMode.DRIVING,
         },
         (response, status) => {
           if (status === 'OK') {
@@ -61,7 +78,7 @@ export default function Map() {
 
       // Add markers for each location
       orderedLocations.forEach(loc => {
-        new google.maps.Marker({
+        new window.google.maps.Marker({
           position: loc,
           map: map,
           title: loc.title,
@@ -71,7 +88,13 @@ export default function Map() {
 
     // Cleanup by removing the script after component unmounts
     return () => {
-      document.body.removeChild(script);
+      // Check if the script exists before attempting to remove it
+      const scriptElement = document.querySelector(`script[src^="https://maps.googleapis.com"]`);
+      if (scriptElement && scriptElement.parentNode) {
+        scriptElement.parentNode.removeChild(scriptElement);
+      }
+      // Also clean up the global initMap function
+      delete window.initMap;
     };
   }, []);
 

@@ -75,7 +75,7 @@ export default function Homepage() {
             <div>
               <div className="bg-white p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">Your Route Today</h2>
-                <Map routes={routes} />
+                <Map />
               </div>
             </div>
           </div>
