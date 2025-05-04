@@ -1,20 +1,32 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>taskflow-navigator-react</title>
-    <meta name="description" content="Lovable Generated Project" />
+    <title>CalRoute - Task Navigator</title>
+    <meta name="description" content="Navigate your tasks and optimize your route" />
     <meta name="author" content="Lovable" />
 
-    <meta property="og:title" content="taskflow-navigator-react" />
-    <meta property="og:description" content="Lovable Generated Project" />
+    <meta property="og:title" content="CalRoute - Task Navigator" />
+    <meta property="og:description" content="Navigate your tasks and optimize your route" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/uploads/logo.jpeg" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="/uploads/logo.jpeg" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#18C5DC" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CalRoute" />
+    
+    <!-- PWA Icons -->
+    <link rel="icon" href="/uploads/logo.jpeg" type="image/jpeg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="manifest" href="/manifest.json" />
   </head>
 
   <body>
@@ -22,5 +34,6 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <script src="/pwa-register.js"></script>
   </body>
 </html>
