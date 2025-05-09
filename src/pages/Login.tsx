@@ -30,7 +30,7 @@ export default function Login() {
           </div>
           
           <div className="mt-8 flex flex-col items-center">
-            <Button 
+            <Button
               onClick={login}
               className="w-full max-w-xs bg-calroute-blue hover:bg-blue-600 text-white flex items-center justify-center gap-2 p-6"
             >
@@ -40,7 +40,6 @@ export default function Login() {
               </svg>
               Login with Google
             </Button>
-            
             <p className="mt-8 text-sm text-gray-500">
               By logging in, you agree to our Terms of Service and Privacy Policy.
             </p>

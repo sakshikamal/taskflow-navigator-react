@@ -1,20 +1,24 @@
-
+// src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 type User = {
   id: string;
   name: string;
   email: string;
   avatar?: string;
+  todoist_token?: string;
 };
 
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
+  loading: boolean;
   login: () => void;
   logout: () => void;
-  loading: boolean;
+  setUser: (u: User) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,54 +27,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  
+
   useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem('calroute_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // 1) Try restoring from localStorage (optional)
+    const stored = localStorage.getItem('calroute_user');
+    if (stored) {
+      setUser(JSON.parse(stored));
     }
-    setLoading(false);
+
+    // 2) Fetch the session-based user from Flask
+    fetch(`${API_BASE}/me`, {
+      credentials: 'include'
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('No session');
+        return res.json();
+      })
+      .then((me: User) => {
+        setUser(me);
+        localStorage.setItem('calroute_user', JSON.stringify(me));
+      })
+      .catch(() => {
+        // no session or error, leave user = null
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const login = () => {
-    // Simulate login
-    const mockUser = {
-      id: '1',
-      name: 'Max Johnson',
-      email: 'max@example.com',
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('calroute_user', JSON.stringify(mockUser));
-    
-    // Check if user has completed preferences
-    const hasPreferences = localStorage.getItem('calroute_preferences');
-    
-    if (hasPreferences) {
-      navigate('/homepage');
-    } else {
-      navigate('/preferences');
-    }
+    // full-page redirect to Flask Google OAuth endpoint
+    window.location.href = `${API_BASE}/login/google`;
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem('calroute_user');
-    navigate('/login');
+    // optional: hit server-side logout
+    fetch(`${API_BASE}/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    }).finally(() => {
+      setUser(null);
+      localStorage.removeItem('calroute_user');
+      navigate('/login');
+    });
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        loading,
+        login,
+        logout,
+        setUser
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within <AuthProvider>');
+  return ctx;
 };
