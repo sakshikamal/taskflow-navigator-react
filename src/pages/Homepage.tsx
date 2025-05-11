@@ -1,40 +1,55 @@
-
-import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useEffect, useState } from 'react';
 import Map from '@/components/Map';
 import TaskCard from '@/components/TaskCard';
 import { AppSidebar } from '@/components/AppSidebar';
+import { useAuth } from '@/context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 interface Task {
   id: string;
   title: string;
   timeRange: string;
+  lat: number;
+  lng: number;
   isActive?: boolean;
 }
 
 export default function Homepage() {
-  const { user } = useAuth();
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: '1', title: 'Quick call John', timeRange: '8 AM - 8:30 AM', isActive: false },
-    { id: '2', title: 'Shopping at Albertsons', timeRange: '11 AM - 12 PM', isActive: true },
-    { id: '3', title: 'ML Class', timeRange: '1:30 PM - 2:20 PM', isActive: false },
-    { id: '4', title: 'Reply to spam emails', timeRange: '5 PM - 6 PM', isActive: false },
-  ]);
+  const { isAuthenticated, loading } = useAuth();
 
-  const [routes] = useState({
-    coordinates: [
-      [-122.4194, 37.7749] as [number, number],
-      [-122.4099, 37.7850] as [number, number],
-      [-122.4150, 37.7900] as [number, number],
-      [-122.4250, 37.7800] as [number, number],
-    ],
-    locations: [
-      { name: 'Start', coordinates: [-122.4194, 37.7749] as [number, number] },
-      { name: 'Grocery Store', coordinates: [-122.4099, 37.7850] as [number, number] },
-      { name: 'Class', coordinates: [-122.4150, 37.7900] as [number, number] },
-      { name: 'Home', coordinates: [-122.4250, 37.7800] as [number, number] },
-    ]
-  });
+  if (loading) return <div>Loading...</div>;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskLocations, setTaskLocations] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+  
+    fetch('http://localhost:8888/api/tasks', {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => {
+        const formattedTasks = data.tasks.map((task: any) => ({
+          id: task.id,
+          title: task.title,
+          timeRange: `${task.start_time} - ${task.end_time}`,
+          lat: task.lat,
+          lng: task.lng
+        }));
+        setTasks(formattedTasks);
+        setTaskLocations(data.tasks.map((t: any) => ({
+          lat: t.lat,
+          lng: t.lng,
+          title: t.title
+        })));
+      })
+      .catch(console.error);
+  }, [isAuthenticated]);
 
   const handleTaskClick = (taskId: string) => {
     setTasks(tasks.map(task => ({
@@ -43,39 +58,79 @@ export default function Homepage() {
     })));
   };
 
+  const handleDynamicSchedule = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+  
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+  
+        fetch("http://localhost:8888/api/dynamic_schedule", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ lat, lng }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              alert("Schedule re-optimized!");
+              // Optionally re-fetch tasks
+              window.location.reload(); // or refetch state
+            } else {
+              alert(data.error || "Reoptimization failed.");
+            }
+          })
+          .catch((err) => {
+            console.error("Dynamic schedule error:", err);
+            alert("Failed to reoptimize.");
+          });
+      },
+      () => {
+        alert("Unable to retrieve your location.");
+      }
+    );
+  };
+  
+
   return (
     <div className="min-h-screen flex">
       <AppSidebar />
-      
       <div className="flex-1 ml-16">
         <div className="max-w-7xl mx-auto p-6">
           <header className="mb-8 pt-6">
-            <h1 className="text-3xl font-bold">
-              Hey {user?.name?.split(' ')[0] || 'there'}!
-            </h1>
-            <p className="text-xl text-gray-600">Here is your schedule</p>
+            <h1 className="text-3xl font-bold">Your Schedule</h1>
+            <p className="text-xl text-gray-600">Here is your plan for today</p>
           </header>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">Today's Tasks</h2>
                 <div className="space-y-2">
-                  {tasks.map((task) => (
-                    <TaskCard 
-                      key={task.id} 
-                      task={task} 
-                      onClick={() => handleTaskClick(task.id)} 
-                    />
+                  {tasks.map(task => (
+                    <TaskCard key={task.id} task={task} onClick={() => handleTaskClick(task.id)} />
                   ))}
                 </div>
               </div>
+              <button
+                    onClick={handleDynamicSchedule}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Reoptimize Schedule
+                  </button>
             </div>
-            
+
             <div>
               <div className="bg-white p-6 rounded-lg shadow">
                 <h2 className="text-xl font-semibold mb-4">Your Route Today</h2>
-                <Map />
+                <Map routes={{ locations: taskLocations }} />
               </div>
             </div>
           </div>

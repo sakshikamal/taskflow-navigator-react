@@ -6,9 +6,9 @@ import { Navigate } from 'react-router-dom';
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
   
-  if (isAuthenticated) {
-    return <Navigate to="/homepage" replace />;
-  }
+  // if (isAuthenticated) {
+  //   return <Navigate to="/homepage" replace />;
+  // }
   
   return (
     <div className="min-h-screen flex">
