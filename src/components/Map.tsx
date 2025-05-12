@@ -8,7 +8,8 @@ declare global {
   }
 }
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.MAPS_API_KEY;
+//const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = 'AIzaSyC_Dz0XtugoW2odkRb-QGaMT96bA0y9YJs';
 
 interface MapProps {
   routes?: {
