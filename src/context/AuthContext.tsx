@@ -48,8 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('calroute_user', JSON.stringify(me));
       })
       .catch(() => {
-        setUser(null);
-        localStorage.removeItem("calroute_user");
+        // no session or error, leave user = null
       })
       .finally(() => {
         setLoading(false);
