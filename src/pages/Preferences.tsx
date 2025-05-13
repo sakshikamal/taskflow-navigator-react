@@ -59,9 +59,12 @@ export default function Preferences() {
   };
 
   const travelModes = [
-    { label: 'Driving', value: 'driving' },
-    { label: 'Walking', value: 'walking' },
-    { label: 'Transit',  value: 'transit'  },
+    { label: 'Car', value: 'car' },
+    { label: 'Bike', value: 'bike' },
+    { label: 'Bus/Train',  value: 'bus_train'  },
+    { label: 'Walking',  value: 'walking'  },
+    { label: 'Rideshare',  value: 'rideshare'  },
+
   ];
 
   const prioritizations = [
