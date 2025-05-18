@@ -1,5 +1,5 @@
 
-import { CheckSquare, Square, Car, Bike, Bus, Walk as WalkIcon } from 'lucide-react';
+import { CheckSquare, Square, Car, Bike, Bus, WalkIcon } from 'lucide-react'; // Changed Walk to WalkIcon
 import { cn } from '@/lib/utils';
 import { Task } from '@/pages/Homepage'; // Import Task interface
 
@@ -13,7 +13,7 @@ const transitIcons = {
   car: <Car size={18} className="mr-2 text-gray-600" />,
   bike: <Bike size={18} className="mr-2 text-gray-600" />,
   bus: <Bus size={18} className="mr-2 text-gray-600" />,
-  walk: <WalkIcon size={18} className="mr-2 text-gray-600" />,
+  walk: <WalkIcon size={18} className="mr-2 text-gray-600" />, // Ensured WalkIcon is used here too
 };
 
 export default function TaskCard({ task, onClick, onToggleComplete }: TaskCardProps) {
@@ -55,3 +55,4 @@ export default function TaskCard({ task, onClick, onToggleComplete }: TaskCardPr
     </div>
   );
 }
+
