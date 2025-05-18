@@ -20,6 +20,9 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log("AuthContext: React object:", React);
+  console.log("AuthContext: useState function:", useState);
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -74,3 +77,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
