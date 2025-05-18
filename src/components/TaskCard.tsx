@@ -1,24 +1,26 @@
 
-import { CheckSquare, Square, Car, Bike, Bus, Footprints } from 'lucide-react'; // Changed Walk to Footprints
+import { CheckSquare, Square, Car, Bike, Bus, Footprints, Edit3, Trash2, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Task } from '@/pages/Homepage'; // Import Task interface
+import { Task } from '@/pages/Homepage';
 
 interface TaskCardProps {
-  task: Task; // Use the imported Task interface
-  onClick: () => void;
+  task: Task;
+  onClick: (task: Task) => void; // Changed to pass full task object
   onToggleComplete: () => void;
+  isActive: boolean; // To highlight if its details are open in modal
 }
 
-const transitIcons = {
+// Export transitIcons or ensure it's accessible by TaskDetailModal
+export const transitIcons: { [key: string]: JSX.Element } = {
   car: <Car size={18} className="mr-2 text-gray-600" />,
   bike: <Bike size={18} className="mr-2 text-gray-600" />,
   bus: <Bus size={18} className="mr-2 text-gray-600" />,
-  walk: <Footprints size={18} className="mr-2 text-gray-600" />, // Changed Walk to Footprints
+  walk: <Footprints size={18} className="mr-2 text-gray-600" />,
 };
 
-export default function TaskCard({ task, onClick, onToggleComplete }: TaskCardProps) {
+export default function TaskCard({ task, onClick, onToggleComplete, isActive }: TaskCardProps) {
   const handleCheckboxClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click event when clicking checkbox
+    e.stopPropagation();
     onToggleComplete();
   };
 
@@ -26,10 +28,10 @@ export default function TaskCard({ task, onClick, onToggleComplete }: TaskCardPr
     <div 
       className={cn(
         "task-card flex justify-between items-center cursor-pointer p-4 rounded-lg shadow-md transition-all duration-300 ease-in-out", 
-        task.isActive && !task.isCompleted && "active bg-calroute-lightBlue border-l-4 border-calroute-blue transform scale-105 shadow-xl",
+        isActive && !task.isCompleted && "active bg-calroute-lightBlue border-l-4 border-calroute-blue transform scale-105 shadow-xl", // isActive based on modal state
         task.isCompleted && "bg-gray-100 opacity-60"
       )}
-      onClick={onClick}
+      onClick={() => onClick(task)} // Pass full task object
     >
       <div className="flex items-center">
         <button
@@ -50,9 +52,7 @@ export default function TaskCard({ task, onClick, onToggleComplete }: TaskCardPr
           </div>
         </div>
       </div>
-      
-      {/* 3-dot menu removed as per request. Edit/Delete will be in task detail popup. */}
+      {/* 3-dot menu removed as edit/delete are in modal */}
     </div>
   );
 }
-

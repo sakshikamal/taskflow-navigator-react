@@ -1,9 +1,13 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
+// Select component from shadcn/ui could be used for a more consistent UI,
+// but for minimal changes, we'll stick to styling the native select for now.
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast'; // Corrected import path
+import { ChevronDown } from 'lucide-react'; // For select arrow styling
 
 export default function Preferences() {
   const navigate = useNavigate();
@@ -16,7 +20,6 @@ export default function Preferences() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Save preferences to localStorage
     const preferences = {
       transportation,
       groceryStore,
@@ -27,136 +30,126 @@ export default function Preferences() {
     localStorage.setItem('calroute_preferences', JSON.stringify(preferences));
     
     toast({
-      title: "Preferences saved",
-      description: "Your preferences have been saved successfully."
+      title: "Preferences Saved",
+      description: "Your preferences have been successfully saved."
     });
     
     navigate('/homepage');
   };
 
+  const transportationOptions = ["Car", "Bike", "Bus/Train", "Walking", "Rideshare"];
+  const groceryStoreOptions = ["Trader Joe's", "Whole Foods", "Albertsons", "Safeway", "Other", "None"];
+  const workHoursOptions = ["9AM - 5PM", "8AM - 4PM", "10AM - 6PM", "Flexible Hours", "Night Shift", "Part-time", "N/A"];
+  const prioritizationOptions = ["Focus on Important First", "Start with Quick Wins", "A Balanced Approach", "Urgent then Important"];
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-calroute-lightGreen to-background p-8">
+    <div className="min-h-screen bg-gradient-to-b from-calroute-lightGreen to-background p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
-            <img 
-              src="/uploads/logo.jpeg" 
-              alt="CalRoute Logo" 
-              className="w-10 h-10 mr-3" 
-            />
-            <h1 className="text-2xl font-bold">CalRoute</h1>
-          </div>
-        </div>
+        <header className="flex items-center justify-start mb-6 sm:mb-8">
+          <img 
+            src="/uploads/logo.jpeg" 
+            alt="CalRoute Logo" 
+            className="w-10 h-10 mr-3 rounded-md" 
+          />
+          <h1 className="text-2xl font-bold text-gray-800">CalRoute</h1>
+        </header>
         
-        <div className="bg-white rounded-xl shadow-xl p-8">
-          <h2 className="text-3xl font-bold text-center mb-2">Welcome to CalRoute!</h2>
-          <p className="text-center text-gray-600 mb-8">
-            To help personalize your schedule and factor in things like how you get around, we have a 
-            few optional questions. You can also skip these for now and adjust your preferences later in 
-            the settings.
-          </p>
+        <Card className="bg-white/90 backdrop-blur-sm shadow-xl rounded-xl">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold text-gray-800">Welcome to CalRoute!</CardTitle>
+            <CardDescription className="text-gray-600 pt-2 max-w-2xl mx-auto">
+              Help us personalize your schedule by answering a few optional questions. 
+              You can adjust these anytime in your profile settings.
+            </CardDescription>
+          </CardHeader>
           
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-medium mb-4">How do you usually get around?</h3>
-                <div className="space-y-3">
-                  {["Car", "Bike", "Bus/Train", "Walking", "Rideshare"].map(option => (
-                    <button
+          <form onSubmit={handleSubmit}>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 p-6">
+              
+              {/* Transportation Section */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium text-gray-700">How do you usually get around?</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {transportationOptions.map(option => (
+                    <Button
                       key={option}
                       type="button"
-                      className={`w-full py-3 px-4 rounded-md border ${
+                      variant="outline"
+                      className={`w-full justify-start py-3 px-4 ${
                         transportation === option 
-                          ? "bg-calroute-lightBlue border-calroute-blue" 
-                          : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                          ? "bg-calroute-blue text-white hover:bg-calroute-blue/90" 
+                          : "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-700"
                       }`}
                       onClick={() => setTransportation(option)}
                     >
                       {option}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
               
-              <div>
-                <h3 className="text-xl font-medium mb-4">Do you have any favorite grocery stores?</h3>
+              {/* Grocery Store Section */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium text-gray-700">Favorite grocery store?</h3>
                 <div className="relative">
                   <select
                     value={groceryStore}
                     onChange={(e) => setGroceryStore(e.target.value)}
-                    className="w-full py-3 px-4 rounded-md border bg-gray-50 border-gray-200 appearance-none pr-10"
+                    className="w-full py-3 px-4 rounded-md border bg-gray-50 border-gray-300 text-gray-700 appearance-none focus:ring-2 focus:ring-calroute-blue focus:border-calroute-blue"
                   >
-                    <option value="">Select a store</option>
-                    <option value="Traders Joe's">Trader Joe's</option>
-                    <option value="Whole Foods">Whole Foods</option>
-                    <option value="Albertsons">Albertsons</option>
-                    <option value="Safeway">Safeway</option>
+                    <option value="">Select a store (optional)</option>
+                    {groceryStoreOptions.map(store => <option key={store} value={store}>{store}</option>)}
                   </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </div>
+                  <ChevronDown className="absolute inset-y-0 right-3 my-auto h-5 w-5 text-gray-400 pointer-events-none" />
                 </div>
               </div>
-            </div>
             
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-medium mb-4">What are your typical work hours?</h3>
+              {/* Work Hours Section */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium text-gray-700">Typical work/study hours?</h3>
                 <div className="relative">
                   <select
                     value={workHours}
                     onChange={(e) => setWorkHours(e.target.value)}
-                    className="w-full py-3 px-4 rounded-md border bg-gray-50 border-gray-200 appearance-none pr-10"
+                    className="w-full py-3 px-4 rounded-md border bg-gray-50 border-gray-300 text-gray-700 appearance-none focus:ring-2 focus:ring-calroute-blue focus:border-calroute-blue"
                   >
-                    <option value="">Select work hours</option>
-                    <option value="9am-5pm">9AM - 5PM</option>
-                    <option value="8am-4pm">8AM - 4PM</option>
-                    <option value="10am-6pm">10AM - 6PM</option>
-                    <option value="flexible">Flexible Hours</option>
-                    <option value="night">Night Shift</option>
+                    <option value="">Select hours (optional)</option>
+                    {workHoursOptions.map(hours => <option key={hours} value={hours}>{hours}</option>)}
                   </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </div>
+                  <ChevronDown className="absolute inset-y-0 right-3 my-auto h-5 w-5 text-gray-400 pointer-events-none" />
                 </div>
               </div>
               
-              <div>
-                <h3 className="text-xl font-medium mb-4">Task Prioritization Style</h3>
-                <div className="space-y-3">
-                  {[
-                    "Focus on Important First",
-                    "Start with Quick Wins",
-                    "A Balanced Approach"
-                  ].map(option => (
-                    <button
+              {/* Task Prioritization Section */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium text-gray-700">Task prioritization style?</h3>
+                <div className="space-y-2">
+                  {prioritizationOptions.map(option => (
+                    <Button
                       key={option}
                       type="button"
-                      className={`w-full py-3 px-4 rounded-md border ${
+                      variant="outline"
+                      className={`w-full justify-start py-3 px-4 ${
                         taskPrioritization === option 
-                          ? "bg-calroute-lightBlue border-calroute-blue" 
-                          : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                         ? "bg-calroute-blue text-white hover:bg-calroute-blue/90" 
+                          : "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-700"
                       }`}
                       onClick={() => setTaskPrioritization(option)}
                     >
                       {option}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
-            </div>
+            </CardContent>
             
-            <div className="md:col-span-2 flex justify-center mt-8">
-              <Button type="submit" className="bg-calroute-blue hover:bg-blue-600 text-white px-10 py-6 text-lg">
-                SUBMIT
+            <CardFooter className="flex justify-center p-6">
+              <Button type="submit" size="lg" className="bg-calroute-green hover:bg-green-700 text-white px-10 py-3 text-base">
+                Save Preferences & Continue
               </Button>
-            </div>
+            </CardFooter>
           </form>
-        </div>
+        </Card>
       </div>
     </div>
   );
