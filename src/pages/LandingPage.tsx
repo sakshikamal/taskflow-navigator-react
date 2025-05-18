@@ -1,8 +1,14 @@
-
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button'; // Assuming you have a Button component
+import { Button } from '@/components/ui/button';
+import { TypewriterText } from '@/components/TypewriterText';
 
 export default function LandingPage() {
+  const sentences = [
+    "From Chaos to Clarity, one route at a time.",
+    "Effortlessly plan your multi-stop days.",
+    "Optimize your journeys, and reclaim your time."
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-[linear-gradient(90deg,rgb(93,224,230),rgb(0,74,173))] text-white">
       <header className="p-6 flex justify-between items-center">
@@ -21,9 +27,15 @@ export default function LandingPage() {
         <h1 className="text-5xl font-bold mb-6">
           Schedule now with CalRoute
         </h1>
-        <p className="text-xl mb-8 max-w-2xl">
-          From Chaos to Clarity, one route at a time. Effortlessly plan your multi-stop days, optimize your journeys, and reclaim your time.
-        </p>
+        <div className="text-xl mb-8 max-w-2xl h-8">
+          <TypewriterText 
+            sentences={sentences}
+            typingDelay={50}
+            deletingDelay={30}
+            pauseDelay={1500}
+            className="block"
+          />
+        </div>
         {/* Placeholder for future animated text and feature boxes */}
         {/* 
           <div className="my-8">
