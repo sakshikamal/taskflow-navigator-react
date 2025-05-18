@@ -5,7 +5,7 @@ import TaskCard from '@/components/TaskCard';
 import TaskDetailModal from '@/components/TaskDetailModal'; // Import the new modal
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Sync } from 'lucide-react';
+import { PlusCircle, RefreshCw as Sync } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast"; // For button click feedback
 
 export interface Task {
