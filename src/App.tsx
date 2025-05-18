@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,48 +27,36 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            <Route path="/" element={<LandingPage />} /> {/* Root path now points to LandingPage */}
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
-            <Route 
-              path="/preferences" 
-              element={
-                <ProtectedRoute>
-                  <Preferences />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/homepage" 
-              element={
-                <ProtectedRoute>
-                  <Homepage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/calendar" 
-              element={
-                <ProtectedRoute>
-                  <Calendar />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/todoist" 
-              element={
-                <ProtectedRoute>
-                  <TodoList />
-                </ProtectedRoute>
-              } 
-            />
+            
+            {/* Protected Routes */}
+            <Route path="/preferences" element={
+              <ProtectedRoute>
+                <Preferences />
+              </ProtectedRoute>
+            } />
+            <Route path="/homepage" element={
+              <ProtectedRoute>
+                <Homepage />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/calendar" element={
+              <ProtectedRoute>
+                <Calendar />
+              </ProtectedRoute>
+            } />
+            <Route path="/todoist" element={
+              <ProtectedRoute>
+                <TodoList />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
