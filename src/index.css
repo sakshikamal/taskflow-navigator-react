@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    --background: 152 100% 98%;
+    --background: 152 100% 98%; /* Default light background */
     --foreground: 140 10% 20%;
 
     --card: 0 0% 100%;
@@ -14,16 +14,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 140 10% 20%;
 
-    --primary: 187 71% 50%;
+    --primary: 187 71% 50%; /* CalRoute Blue as primary */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 100 62% 61%;
+    --secondary: 100 62% 61%; /* CalRoute Green as secondary */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 190 10% 90%;
     --muted-foreground: 140 10% 40%;
 
-    --accent: 190 95% 90%;
+    --accent: 190 95% 90%; /* Lighter shade for accents */
     --accent-foreground: 140 10% 20%;
 
     --destructive: 0 84.2% 60.2%;
@@ -31,18 +31,17 @@
 
     --border: 190 20% 85%;
     --input: 190 20% 85%;
-    --ring: 187 71% 50%;
+    --ring: 187 71% 50%; /* CalRoute Blue for rings */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 187 71% 50%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 100 62% 61%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 190 95% 90%;
-    --sidebar-accent-foreground: 140 10% 20%;
-    --sidebar-border: 190 20% 85%;
-    --sidebar-ring: 187 71% 50%;
+    /* Sidebar specific theme variables - kept for consistency if needed elsewhere */
+    --sidebar-background: hsl(var(--primary)); /* Using primary for sidebar */
+    --sidebar-foreground: hsl(var(--primary-foreground));
+    --sidebar-active: hsl(var(--secondary)); /* Using secondary for active items */
+    --sidebar-active-foreground: hsl(var(--secondary-foreground));
+    --sidebar-hover: 200 80% 60%; /* A slightly different blue for hover */
+    --sidebar-hover-foreground: 0 0% 100%;
   }
 }
 
@@ -53,21 +52,39 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif; /* Example: Using Inter font, ensure it's linked in index.html or imported */
   }
   
   .mapboxgl-map {
     @apply rounded-lg shadow-lg;
   }
   
+  /* Updated TaskCard base styling, active state is handled in component */
   .task-card {
-    @apply bg-white rounded-lg shadow-lg p-4 mb-3 transition-all duration-300;
+    @apply bg-white rounded-lg shadow-md p-4 mb-3 transition-all duration-200 ease-in-out;
   }
   
+  /* Removed .task-card.active styling as it's now handled in the component with Tailwind */
+  /* 
   .task-card.active {
     @apply bg-calroute-lightBlue border-l-4 border-calroute-blue transform -translate-x-2 scale-105 shadow-xl animate-task-highlight;
   }
+  */
 }
 
+/* Keep Mapbox specific overrides if needed */
 .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib {
   display: none !important;
 }
+
+/* Optional: Add a general keyframe for subtle hover effects if desired */
+@layer utilities {
+  @keyframes subtle-lift {
+    0%, 100% { transform: translateY(0); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    50% { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+  }
+  .animate-subtle-lift-hover:hover {
+    animation: subtle-lift 0.3s ease-out forwards;
+  }
+}
+
