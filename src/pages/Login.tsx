@@ -15,7 +15,7 @@ export default function Login() {
       {/* Left side - Logo and color */}
       <div className="w-2/5 bg-[linear-gradient(90deg,rgb(93,224,230),rgb(0,74,173))] flex flex-col items-center justify-center p-8 text-white">
         <img 
-          src="/uploads/logo.jpeg" 
+          src="/uploads/logo.png" 
           alt="CalRoute Logo" 
           className="max-w-xs mb-6 rounded-lg"
         />

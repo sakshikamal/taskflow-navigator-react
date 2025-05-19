@@ -13,7 +13,7 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col bg-[linear-gradient(90deg,rgb(93,224,230),rgb(0,74,173))] text-white">
       <header className="p-6 flex justify-between items-center">
         <div className="flex items-center">
-          <img src="/uploads/logo.jpeg" alt="CalRoute Logo" className="w-10 h-10 mr-3 rounded-md" />
+          <img src="/uploads/logo.png" alt="CalRoute Logo" className="w-16 h-16 rounded-md" />
           <span className="text-2xl font-bold">CalRoute</span>
         </div>
         <Link to="/login">

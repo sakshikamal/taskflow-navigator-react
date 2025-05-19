@@ -37,7 +37,7 @@ export function AppSidebar() {
       <div className="flex items-center justify-between p-4 border-b border-white/20"> {/* Added border */}
         <div className="flex items-center min-w-0"> {/* Added min-w-0 for truncation */}
           <img 
-            src="/uploads/logo.jpeg" 
+            src="/uploads/logo.png" 
             alt="CalRoute Logo" 
             className="w-8 h-8 mr-2 rounded-md flex-shrink-0" 
           />

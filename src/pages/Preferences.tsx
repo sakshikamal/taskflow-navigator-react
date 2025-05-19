@@ -47,7 +47,7 @@ export default function Preferences() {
       <div className="max-w-4xl mx-auto">
         <header className="flex items-center justify-start mb-6 sm:mb-8">
           <img 
-            src="/uploads/logo.jpeg" 
+            src="/uploads/logo.png" 
             alt="CalRoute Logo" 
             className="w-10 h-10 mr-3 rounded-md" 
           />
