@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import Calendar from './pages/Calendar';
 import TodoList from './pages/TodoList';
 import NotFound from "./pages/NotFound";
+import PricingPage from './pages/PricingPage'; // Add PricingPage import
 // Index page is no longer needed as LandingPage takes over the root route.
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/pricing" element={<PricingPage />} /> {/* Add Pricing Route */}
             
             {/* Protected Routes */}
             <Route path="/preferences" element={

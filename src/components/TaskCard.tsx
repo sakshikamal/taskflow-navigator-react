@@ -1,4 +1,3 @@
-
 import { CheckSquare, Square, Car, Bike, Bus, Footprints, Edit3, Trash2, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Task } from '@/pages/Homepage';
@@ -27,32 +26,47 @@ export default function TaskCard({ task, onClick, onToggleComplete, isActive }: 
   return (
     <div 
       className={cn(
-        "task-card flex justify-between items-center cursor-pointer p-4 rounded-lg shadow-md transition-all duration-300 ease-in-out", 
-        isActive && !task.isCompleted && "active bg-calroute-lightBlue border-l-4 border-calroute-blue transform scale-105 shadow-xl", // isActive based on modal state
-        task.isCompleted && "bg-gray-100 opacity-60"
+        "task-card flex justify-between items-center cursor-pointer p-4 rounded-xl border border-gray-100 bg-white/50 backdrop-blur-sm transition-all duration-300 ease-in-out hover:bg-white/80", 
+        isActive && !task.isCompleted && "bg-gradient-to-r from-[rgb(93,224,230)]/10 to-[rgb(0,74,173)]/10 border-l-4 border-[rgb(0,74,173)] transform scale-102 shadow-lg", 
+        task.isCompleted && "bg-gray-50/50 opacity-60"
       )}
-      onClick={() => onClick(task)} // Pass full task object
+      onClick={() => onClick(task)}
     >
-      <div className="flex items-center">
+      <div className="flex items-center gap-4">
         <button
           onClick={handleCheckboxClick}
-          className="mr-3 p-1 focus:outline-none"
+          className="focus:outline-none transition-transform duration-200 hover:scale-110"
           aria-label={task.isCompleted ? "Mark task as incomplete" : "Mark task as complete"}
         >
-          {task.isCompleted ? <CheckSquare size={24} className="text-green-500" /> : <Square size={24} className="text-gray-400" />}
+          {task.isCompleted ? 
+            <CheckSquare size={24} className="text-[rgb(0,74,173)]" /> : 
+            <Square size={24} className="text-gray-400 hover:text-[rgb(93,224,230)]" />
+          }
         </button>
         <div>
-          <h3 className={cn("font-semibold", task.isCompleted && "line-through text-gray-500")}>{task.title}</h3>
-          <p className={cn("text-sm text-gray-500", task.isCompleted && "line-through")}>{task.timeRange}</p>
-          <div className="flex items-center mt-1 text-sm text-gray-600">
+          <h3 className={cn(
+            "font-semibold text-gray-800", 
+            task.isCompleted && "line-through text-gray-400"
+          )}>
+            {task.title}
+          </h3>
+          <p className={cn(
+            "text-sm text-gray-500 mt-1", 
+            task.isCompleted && "line-through"
+          )}>
+            {task.timeRange}
+          </p>
+          <div className="flex items-center mt-2 text-sm text-gray-600">
             {transitIcons[task.transitMode]}
-            <span className={cn(task.isCompleted && "line-through")}>
+            <span className={cn(
+              "text-gray-600",
+              task.isCompleted && "line-through"
+            )}>
               {task.transitMode.charAt(0).toUpperCase() + task.transitMode.slice(1)}
             </span>
           </div>
         </div>
       </div>
-      {/* 3-dot menu removed as edit/delete are in modal */}
     </div>
   );
 }

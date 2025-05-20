@@ -1,37 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Map from '@/components/Map';
 import TaskCard from '@/components/TaskCard';
-import TaskDetailModal from '@/components/TaskDetailModal'; // Import the new modal
+import TaskDetailModal from '@/components/TaskDetailModal';
+import NewTaskModal from '@/components/NewTaskModal';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, RefreshCw as Sync } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast"; // For button click feedback
+import { useToast } from "@/hooks/use-toast";
+import { Spinner } from "@/components/ui/spinner";
 
 export interface Task {
   id: string;
   title: string;
   timeRange: string;
-  isActive?: boolean; // This can now be controlled by selectedTaskForModal
+  isActive?: boolean;
   transitMode: 'car' | 'bike' | 'bus' | 'walk';
   isCompleted: boolean;
   description: string;
   locationName?: string;
   locationAddress?: string;
+  priority: number;
 }
 
 export default function Homepage() {
   const { user } = useAuth();
-  const { toast } = useToast(); // Initialize toast
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: '1', title: 'Quick call John', timeRange: '8 AM - 8:30 AM', transitMode: 'walk', isCompleted: false, description: 'Follow up call with John about the project proposal.', locationName: 'Home Office' },
-    { id: '2', title: 'Shopping at Albertsons', timeRange: '11 AM - 12 PM', transitMode: 'car', isCompleted: false, description: 'Buy groceries for the week. List: milk, eggs, bread, chicken.', locationName: 'Albertsons', locationAddress: '456 Grocery Ln' },
-    { id: '3', title: 'ML Class', timeRange: '1:30 PM - 2:20 PM', transitMode: 'bike', isCompleted: true, description: 'Attend Machine Learning lecture.', locationName: 'University Hall, Room 101' },
-    { id: '4', title: 'Reply to spam emails', timeRange: '5 PM - 6 PM', transitMode: 'walk', isCompleted: false, description: 'Clear out the spam folder and unsubscribe from unwanted newsletters.', locationName: 'Home Office' },
-  ]);
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
 
   const [routes] = useState({
     coordinates: [
@@ -48,6 +48,32 @@ export default function Homepage() {
     ]
   });
 
+  useEffect(() => {
+    const loadTasks = async () => {
+      setIsLoading(true);
+      try {
+        // Short delay to demonstrate loading state
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setTasks([
+          { id: '1', title: 'Quick call John', timeRange: '8 AM - 8:30 AM', transitMode: 'walk', isCompleted: false, description: 'Follow up call with John about the project proposal.', locationName: 'Home Office', priority: 2 },
+          { id: '2', title: 'Shopping at Albertsons', timeRange: '11 AM - 12 PM', transitMode: 'car', isCompleted: false, description: 'Buy groceries for the week. List: milk, eggs, bread, chicken.', locationName: 'Albertsons', locationAddress: '456 Grocery Ln', priority: 1 },
+          { id: '3', title: 'ML Class', timeRange: '1:30 PM - 2:20 PM', transitMode: 'bike', isCompleted: true, description: 'Attend Machine Learning lecture.', locationName: 'University Hall, Room 101', priority: 1 },
+          { id: '4', title: 'Reply to spam emails', timeRange: '5 PM - 6 PM', transitMode: 'walk', isCompleted: false, description: 'Clear out the spam folder and unsubscribe from unwanted newsletters.', locationName: 'Home Office', priority: 3 },
+        ]);
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load tasks. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTasks();
+  }, [toast]);
 
   const handleTaskCardClick = (task: Task) => {
     setSelectedTaskForModal(task);
@@ -63,97 +89,127 @@ export default function Homepage() {
     setTasks(currentTasks => currentTasks.map(task => 
       task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
     ));
-    // If the completed task is the one in the modal, update the modal's task data
     if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
       setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null);
     }
   };
 
   const handleAddNewTask = () => {
-    toast({ title: "Add New Task", description: "This feature is coming soon!" });
-    console.log("Add new task clicked");
-    // Logic to open an add task modal or navigate to an add task page
+    setIsNewTaskModalOpen(true);
+  };
+
+  const handleNewTaskSubmit = (taskData: any) => {
+    const timeRange = taskData.startTime && taskData.endTime 
+      ? `${taskData.startTime} - ${taskData.endTime}`
+      : `${taskData.duration}`;
+
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: taskData.title,
+      timeRange,
+      transitMode: 'car', // Default transit mode, can be updated later
+      isCompleted: false,
+      description: taskData.description || '',
+      locationName: taskData.location,
+      priority: taskData.priority
+    };
+
+    setTasks(prevTasks => [...prevTasks, newTask]);
   };
 
   const handleSyncCalendar = () => {
     toast({ title: "Sync Calendar/Todoist", description: "This feature is coming soon!" });
-    console.log("Sync calendar clicked");
-    // Logic for sync functionality
   };
   
   const handleEditTask = (taskToEdit: Task) => {
     toast({ title: "Edit Task", description: `Editing ${taskToEdit.title}. Feature coming soon!`});
-    // In a real app, you'd open an edit form/modal
   };
 
   const handleDeleteTask = (taskIdToDelete: string) => {
     setTasks(prevTasks => prevTasks.filter(task => task.id !== taskIdToDelete));
     toast({ title: "Task Deleted", description: `Task has been removed.`, variant: "destructive"});
-    // If the deleted task was in the modal, close it
     if (selectedTaskForModal && selectedTaskForModal.id === taskIdToDelete) {
       handleCloseModal();
     }
   };
 
-
   return (
     <div className="min-h-screen flex">
       <AppSidebar />
       
-      <div className="flex-1 ml-16 bg-[linear-gradient(90deg,rgb(205,255,216),rgb(148,185,255))] overflow-y-auto">
+      <div className="flex-1 ml-0 md:ml-16 bg-gradient-to-b from-[rgb(0,74,173)] to-[rgb(93,224,230)] overflow-y-auto pb-20 md:pb-0">
         <div className="max-w-7xl mx-auto p-6">
           <header className="mb-8 pt-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">
-                  Hey {user?.name?.split(' ')[0] || 'there'}!
-                </h1>
-                <p className="text-xl text-gray-700">Here is your schedule</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+              <div className="flex items-start sm:items-center gap-3">
+                <img 
+                  src="/uploads/logo.png" 
+                  alt="CalRoute Logo" 
+                  className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl"
+                />
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                    Hey {user?.name?.split(' ')[0] || 'there'}!{' '}
+                    <span className="inline-block animate-wave origin-[70%_70%]">👋</span>
+                  </h1>
+                  <p className="text-lg sm:text-xl text-white/90">Here's your optimized schedule for today</p>
+                </div>
               </div>
-              <Button 
-                variant="outline" 
-                className="border-calroute-blue text-calroute-blue hover:bg-calroute-lightBlue"
-                onClick={handleSyncCalendar}
-              >
-                <Sync className="mr-2 h-4 w-4" /> Sync Calendar/Todoist
-              </Button> 
+              <div>
+                <Button 
+                  variant="outline" 
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm whitespace-nowrap"
+                  onClick={handleSyncCalendar}
+                >
+                  <Sync className="mr-2 h-4 w-4" /> 
+                  <span className="hidden sm:inline">Sync Calendar/Todoist</span>
+                  <span className="sm:hidden">Sync</span>
+                </Button> 
+              </div>
             </div>
           </header>
           
-          <div className="mb-6 p-4 bg-white/70 rounded-lg shadow">
-            <p className="text-gray-700">This is a space for a text box about the schedule. You can add notes or summaries here.</p>
+          <div className="mb-6 p-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
+            <p className="text-gray-700">Your schedule has been optimized for maximum efficiency. Total travel time: 45 minutes.</p>
           </div> 
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-lg">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold text-gray-800">Today's Tasks</h2>
+              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/20">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-semibold text-gray-800">Today's Tasks</h2>
                   <Button 
-                    className="bg-calroute-blue hover:bg-blue-700 text-white"
+                    className="bg-[rgb(0,74,173)] text-white hover:bg-[rgb(93,224,230)] transition-colors duration-200"
                     onClick={handleAddNewTask}
                   >
                     <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
                   </Button> 
                 </div>
-                <div className="space-y-3">
-                  {tasks.map((task) => (
-                    <TaskCard 
-                      key={task.id} 
-                      task={task} 
-                      onClick={handleTaskCardClick}
-                      onToggleComplete={() => handleToggleComplete(task.id)}
-                      isActive={selectedTaskForModal?.id === task.id && !task.isCompleted}
-                    />
-                  ))}
-                </div>
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <Spinner className="text-[rgb(0,74,173)]" size="lg" />
+                    <p className="mt-4 text-gray-600">Optimizing your route...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {tasks.map((task) => (
+                      <TaskCard 
+                        key={task.id} 
+                        task={task} 
+                        onClick={handleTaskCardClick}
+                        onToggleComplete={() => handleToggleComplete(task.id)}
+                        isActive={selectedTaskForModal?.id === task.id && !task.isCompleted}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             
             <div>
-              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-lg">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Route Today</h2>
-                <div className="h-[400px] bg-gray-200 rounded-md flex items-center justify-center">
+              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Your Route Today</h2>
+                <div className="h-[500px] rounded-lg overflow-hidden shadow-inner">
                   <Map />
                 </div>
               </div>
@@ -170,6 +226,11 @@ export default function Homepage() {
           onDelete={handleDeleteTask}
         />
       )}
+      <NewTaskModal
+        isOpen={isNewTaskModalOpen}
+        onClose={() => setIsNewTaskModalOpen(false)}
+        onSubmit={handleNewTaskSubmit}
+      />
     </div>
   );
 }
