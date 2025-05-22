@@ -70,7 +70,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('calroute_user');
       navigate('/login');
     });
+  //   console.log('AuthProvider: Initializing...');
+  //   // Check if user is logged in
+  //   const storedUser = localStorage.getItem('calroute_user');
+  //   console.log('AuthProvider: Stored user:', storedUser);
+    
+  //   if (storedUser) {
+  //     try {
+  //       const parsedUser = JSON.parse(storedUser);
+  //       console.log('AuthProvider: Setting user:', parsedUser);
+  //       setUser(parsedUser);
+  //     } catch (error) {
+  //       console.error('AuthProvider: Error parsing stored user:', error);
+  //       localStorage.removeItem('calroute_user');
+  //     }
+  //   }
+    
+  //   console.log('AuthProvider: Setting loading to false');
+  //   setLoading(false);
+  // }, []);
+
+  // const login = () => {
+  //   console.log('AuthProvider: Login called');
+  //   // Simulate login
+  //   const mockUser = {
+  //     id: '1',
+  //     name: 'Max Johnson',
+  //     email: 'max@example.com',
+  //   };
+    
+  //   console.log('AuthProvider: Setting user after login:', mockUser);
+  //   setUser(mockUser);
+  //   localStorage.setItem('calroute_user', JSON.stringify(mockUser));
+    
+  //   // Check if user has completed preferences
+  //   const hasPreferences = localStorage.getItem('calroute_preferences');
+  //   console.log('AuthProvider: Has preferences:', hasPreferences);
+    
+  //   if (hasPreferences) {
+  //     console.log('AuthProvider: Navigating to homepage');
+  //     navigate('/homepage');
+  //   } else {
+  //     console.log('AuthProvider: Navigating to preferences');
+  //     navigate('/preferences');
+  //   }
+  // };
+
+  // const logout = () => {
+  //   console.log('AuthProvider: Logout called');
+  //   setUser(null);
+  //   localStorage.removeItem('calroute_user');
+  //   navigate('/login');
   };
+
+  const isAuthenticated = !!user;
+  console.log('AuthProvider: Current state -', { user, isAuthenticated, loading });
 
   return (
     <AuthContext.Provider
@@ -83,13 +137,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser
       }}
     >
+    {/* <AuthContext.Provider value={{ user, isAuthenticated, login, logout, loading }}> */}
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within <AuthProvider>');
-  return ctx;
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

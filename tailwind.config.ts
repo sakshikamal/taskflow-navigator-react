@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -53,21 +52,21 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				sidebar: {
+				sidebar: { // These are more semantic if you use them directly
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+					active: 'hsl(var(--sidebar-active))',
+          'active-foreground': 'hsl(var(--sidebar-active-foreground))',
+					hover: 'hsl(var(--sidebar-hover))',
+          'hover-foreground': 'hsl(var(--sidebar-hover-foreground))',
+					border: 'hsl(var(--sidebar-border))', // If you need specific border for sidebar
+					ring: 'hsl(var(--sidebar-ring))'      // If you need specific ring for sidebar
 				},
-				calroute: {
-					blue: '#33C3F0',
-					green: '#8ed760',
-					lightBlue: '#D3E4FD',
-					lightGreen: '#e0f5d3',
+				calroute: { // Your brand colors
+					blue: '#33C3F0', // Primary theme color
+					green: '#8ed760', // Secondary theme color, accents
+					lightBlue: '#D3E4FD', // Lighter shade for backgrounds, hover states
+					lightGreen: '#e0f5d3', // Lighter shade for backgrounds, hover states
 				}
 			},
 			borderRadius: {
@@ -92,19 +91,21 @@ export default {
 						height: '0'
 					}
 				},
-				'task-highlight': {
-					'0%, 100%': {
-						transform: 'translateY(0)'
-					},
-					'50%': {
-						transform: 'translateY(-3px)'
-					}
-				}
+				wave: {
+					'0%': { transform: 'rotate(0.0deg)' },
+					'10%': { transform: 'rotate(14.0deg)' },
+					'20%': { transform: 'rotate(-8.0deg)' },
+					'30%': { transform: 'rotate(14.0deg)' },
+					'40%': { transform: 'rotate(-4.0deg)' },
+					'50%': { transform: 'rotate(10.0deg)' },
+					'60%': { transform: 'rotate(0.0deg)' },
+					'100%': { transform: 'rotate(0.0deg)' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'task-highlight': 'task-highlight 2s ease-in-out infinite'
+				'wave': 'wave 2.5s ease-in-out infinite',
 			}
 		}
 	},

@@ -1,94 +1,138 @@
-
 import { useState } from 'react';
-import { Home, User, Calendar, ListTodo, Menu, X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Home, Calendar as CalendarIcon, ListTodo, Menu, X, LogOut, User } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
 export function AppSidebar() {
   const [expanded, setExpanded] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   
   const toggleSidebar = () => {
     setExpanded(!expanded);
   };
   
   const navItems = [
-    { path: '/homepage', icon: <Home size={24} />, label: 'Home' },
-    { path: '/profile', icon: <User size={24} />, label: 'Profile' },
-    { path: '/calendar', icon: <Calendar size={24} />, label: 'Calendar' },
-    { path: '/todoist', icon: <ListTodo size={24} />, label: 'Todoist' },
+    { path: '/homepage', icon: <Home size={20} />, label: 'Home' },
+    { path: '/calendar', icon: <CalendarIcon size={20} />, label: 'Calendar' },
+    { path: '/todoist', icon: <ListTodo size={20} />, label: 'Tasks' },
+    { path: '/profile', icon: <User size={20} />, label: 'Profile' },
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div 
       className={cn(
-        "fixed top-0 left-0 h-full bg-calroute-blue transition-all duration-300 flex flex-col z-10",
-        expanded ? "w-64" : "w-16"
+        "fixed bg-gradient-to-b from-[rgb(0,74,173)] to-[rgb(93,224,230)] text-white transition-all duration-300 flex flex-col z-20",
+        // Mobile: Bottom navigation
+        "md:top-0 md:left-0 md:h-full", // Desktop: Side navigation
+        "bottom-0 left-0 right-0 h-16 md:h-full", // Mobile: Bottom bar
+        expanded ? "md:w-64" : "md:w-16", // Width only applies to desktop
       )}
     >
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center">
+      {/* Logo and Toggle - Only visible on desktop */}
+      <div className="hidden md:flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
+        <div className="flex items-center min-w-0">
           <img 
-            src="/uploads/logo.jpeg" 
+            src="/uploads/logo.png" 
             alt="CalRoute Logo" 
-            className="w-8 h-8 mr-2" 
+            className={cn(
+              "rounded-xl transition-all duration-300",
+              expanded ? "w-12 h-12" : "w-10 h-10"
+            )}
           />
-          {expanded && <span className="text-white font-bold">CalRoute</span>}
+          {expanded && (
+            <span className="font-bold text-lg tracking-wide ml-2">
+              CalRoute
+            </span>
+          )}
         </div>
         <button 
           onClick={toggleSidebar}
-          className="text-white hover:bg-calroute-lightBlue hover:text-calroute-blue rounded-md p-1"
+          className="text-white/80 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition-colors"
         >
           {expanded ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
-      <div className="flex-1">
-        <div className="px-2 py-4">
-          {user && expanded && (
-            <div className="mb-6 px-3 py-2 text-white">
-              <p className="text-sm">Hello,</p>
-              <p className="font-semibold">{user.name}</p>
+      {/* Welcome message and User Profile - Only visible on desktop when expanded */}
+      <div className="hidden md:block flex-1 py-6">
+        {user && expanded && (
+          <div className="mb-6 px-4 py-2">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                <User size={24} className="text-white/80" />
+              </div>
+              <div>
+                <p className="text-sm text-white/70">Welcome back,</p>
+                <p className="font-semibold text-white/90 truncate">{user.name}</p>
+              </div>
             </div>
-          )}
-          
-          <nav className="space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center px-3 py-2 rounded-md transition-colors",
-                  location.pathname === item.path 
-                    ? "bg-calroute-green text-white" 
-                    : "text-white hover:bg-calroute-lightBlue hover:text-calroute-blue"
-                )}
-              >
-                <div className="flex items-center">
-                  {item.icon}
-                  {expanded && <span className="ml-3">{item.label}</span>}
-                </div>
-              </Link>
-            ))}
-          </nav>
-        </div>
+          </div>
+        )}
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:block space-y-2 px-3">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "flex items-center px-3 py-3 rounded-xl transition-all duration-200",
+                location.pathname === item.path 
+                  ? "bg-white/20 font-semibold shadow-inner" 
+                  : "hover:bg-white/10",
+                !expanded && "justify-center"
+              )}
+              title={item.label}
+            >
+              {item.icon}
+              {expanded && <span className="ml-3">{item.label}</span>}
+            </Link>
+          ))}
+        </nav>
       </div>
-      
-      {user && (
-        <div className="p-4">
-          <button 
-            onClick={() => {}} 
+
+      {/* Mobile Navigation */}
+      <nav className="md:hidden flex justify-around items-center h-full">
+        {navItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
             className={cn(
-              "flex items-center text-white hover:bg-calroute-lightBlue hover:text-calroute-blue rounded-md transition-colors px-3 py-2 w-full",
+              "flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-all duration-200",
+              location.pathname === item.path 
+                ? "bg-white/20 font-semibold" 
+                : "hover:bg-white/10"
             )}
+            title={item.label}
           >
-            <User size={24} />
-            {expanded && <span className="ml-3">Settings</span>}
-          </button>
-        </div>
-      )}
+            {item.icon}
+            <span className="text-xs mt-1">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+      
+      {/* Logout button - Only visible on desktop */}
+      <div className="hidden md:block p-3 border-t border-white/10 bg-white/5">
+        <button 
+          onClick={handleLogout}
+          className={cn(
+            "flex items-center text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 px-3 py-3 w-full",
+            !expanded && "justify-center"
+          )}
+          title="Logout"
+        >
+          <LogOut size={20} />
+          {expanded && <span className="ml-3">Logout</span>}
+        </button>
+      </div>
     </div>
   );
 }
