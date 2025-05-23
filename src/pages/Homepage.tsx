@@ -7,9 +7,10 @@ import NewTaskModal from '@/components/NewTaskModal';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, RefreshCw as Sync } from 'lucide-react';
+import { PlusCircle, RefreshCw as Sync, Pencil } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
+import PendingTasksModal from '@/components/PendingTasksModal';
 
 export interface Task {
   id: string;
@@ -26,16 +27,66 @@ export interface Task {
   priority: number;
 }
 
+const DEMO_MODE = true;
+
 export default function Homepage() {
   const { isAuthenticated, loading, user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [taskLocations, setTaskLocations] = useState<{ lat: number; lng: number; title: string }[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(DEMO_MODE ? [
+    {
+      id: '1',
+      title: 'Go to gym',
+      timeRange: '5:00 PM - 5:45 PM',
+      lat: 33.659,
+      lng: -117.86,
+      transitMode: 'car',
+      isCompleted: false,
+      description: 'Evening workout session',
+      locationName: 'UCI ARC',
+      locationAddress: '680 California Ave, Irvine, CA',
+      priority: 1,
+    },
+    {
+      id: '2',
+      title: 'Buy groceries',
+      timeRange: '6:00 PM - 6:30 PM',
+      lat: 33.670,
+      lng: -117.85,
+      transitMode: 'car',
+      isCompleted: false,
+      description: 'Pick up groceries for dinner',
+      locationName: 'Trader Joe\'s',
+      locationAddress: '4225 Campus Dr, Irvine, CA',
+      priority: 2,
+    },
+    {
+      id: '3',
+      title: 'Call Mom',
+      timeRange: '7:00 PM - 7:30 PM',
+      lat: 33.660,
+      lng: -117.87,
+      transitMode: 'walk',
+      isCompleted: false,
+      description: 'Weekly catch-up call',
+      locationName: 'Home',
+      locationAddress: '123 Main St, Irvine, CA',
+      priority: 3,
+    },
+  ] : []);
+  const [taskLocations, setTaskLocations] = useState<{ lat: number; lng: number; title: string }[]>(DEMO_MODE ? [
+    { lat: 33.659, lng: -117.86, title: 'UCI ARC' },
+    { lat: 33.670, lng: -117.85, title: 'Trader Joe\'s' },
+    { lat: 33.660, lng: -117.87, title: 'Home' },
+  ] : []);
 
   const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [hasPendingTasks, setHasPendingTasks] = useState(false);
+  const [editTask, setEditTask] = useState<Task | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   if (loading) return <div>Loading...</div>;
 
@@ -43,55 +94,66 @@ export default function Homepage() {
     return <Navigate to="/login" replace />;
   }
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      if (!isAuthenticated) return;
-      
-      setIsLoading(true);
-      try {
-        const response = await fetch('http://localhost:8888/api/tasks', {
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch tasks');
-        }
-
-        const data = await response.json();
-        const formattedTasks = data.tasks.map((task: any) => ({
-          id: task.id,
-          title: task.title,
-          timeRange: `${task.start_time} - ${task.end_time}`,
-          lat: task.lat,
-          lng: task.lng,
-          transitMode: task.transit_mode || 'car',
-          isCompleted: task.is_completed || false,
-          description: task.description || '',
-          locationName: task.location_name,
-          locationAddress: task.location_address,
-          priority: task.priority || 1
-        }));
-
-        setTasks(formattedTasks);
-        setTaskLocations(formattedTasks.map(task => ({
-          lat: task.lat,
-          lng: task.lng,
-          title: task.title
-        })));
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load tasks. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
+  // Move fetchTasks to top level
+  const fetchTasks = async () => {
+    if (DEMO_MODE) return;
+    if (!isAuthenticated) return;
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:8888/api/tasks', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
       }
-    };
+      const data = await response.json();
+      const formattedTasks = data.tasks.map((task: any) => ({
+        id: task.id,
+        title: task.title,
+        timeRange: `${task.start_time} - ${task.end_time}`,
+        lat: task.lat,
+        lng: task.lng,
+        transitMode: task.transit_mode || 'car',
+        isCompleted: task.is_completed || false,
+        description: task.description || '',
+        locationName: task.location_name,
+        locationAddress: task.location_address,
+        priority: task.priority || 1
+      }));
+      setTasks(formattedTasks);
+      setTaskLocations(formattedTasks.map(task => ({
+        lat: task.lat,
+        lng: task.lng,
+        title: task.title
+      })));
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load tasks. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchTasks();
+  useEffect(() => {
+    if (!DEMO_MODE) fetchTasks();
   }, [isAuthenticated, toast]);
+
+  // Fetch pending tasks on mount
+  useEffect(() => {
+    fetch('http://localhost:8888/api/pending_tasks', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.tasks && data.tasks.length > 0) {
+          setHasPendingTasks(true);
+          setShowPendingModal(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleTaskCardClick = (task: Task) => {
     setSelectedTaskForModal(task);
@@ -104,20 +166,26 @@ export default function Homepage() {
   };
 
   const handleToggleComplete = async (taskId: string) => {
+    if (DEMO_MODE) {
+      setTasks(prev => prev.map(task =>
+        task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
+      ));
+      if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
+        setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null);
+      }
+      return;
+    }
     try {
       const response = await fetch(`http://localhost:8888/api/tasks/${taskId}/toggle`, {
         method: 'POST',
         credentials: 'include'
       });
-
       if (!response.ok) {
         throw new Error('Failed to toggle task completion');
       }
-
       setTasks(currentTasks => currentTasks.map(task => 
         task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
       ));
-
       if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
         setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null);
       }
@@ -136,34 +204,44 @@ export default function Homepage() {
   };
 
   const handleNewTaskSubmit = async (taskData: any) => {
+    if (DEMO_MODE) {
+      const newTask: Task = {
+        id: Date.now().toString(),
+        title: taskData.title,
+        timeRange: `${taskData.startTime} - ${taskData.endTime}`,
+        lat: taskData.lat || 33.659,
+        lng: taskData.lng || -117.86,
+        transitMode: taskData.transitMode || 'car',
+        isCompleted: false,
+        description: taskData.description || '',
+        locationName: taskData.location,
+        locationAddress: taskData.location,
+        priority: taskData.priority || 1,
+      };
+      setTasks(prev => [...prev, newTask]);
+      setTaskLocations(prev => [...prev, { lat: newTask.lat, lng: newTask.lng, title: newTask.title }]);
+      toast({ title: "Success", description: "Task created successfully!" });
+      return;
+    }
     try {
       // Convert time strings to ISO format
       const today = new Date();
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-
       let startTime = null;
       let endTime = null;
-
       if (taskData.startTime && taskData.endTime) {
-        // Parse the time strings
         const [startHours, startMinutes] = taskData.startTime.split(':').map(Number);
         const [endHours, endMinutes] = taskData.endTime.split(':').map(Number);
-
-        // Create Date objects
         startTime = new Date(today);
         startTime.setHours(startHours, startMinutes, 0);
-        
         endTime = new Date(today);
         endTime.setHours(endHours, endMinutes, 0);
-
-        // If end time is earlier than start time, set it to tomorrow
         if (endTime <= startTime) {
           endTime = new Date(tomorrow);
           endTime.setHours(endHours, endMinutes, 0);
         }
       }
-
       const response = await fetch('http://localhost:8888/api/tasks', {
         method: 'POST',
         credentials: 'include',
@@ -184,12 +262,10 @@ export default function Homepage() {
           transit_mode: taskData.transitMode || 'car'
         }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to create task');
       }
-
       const newTask = await response.json();
       setTasks(prevTasks => [...prevTasks, {
         id: newTask.id,
@@ -204,14 +280,11 @@ export default function Homepage() {
         locationAddress: newTask.location_address,
         priority: newTask.priority || 1
       }]);
-
-      // Update task locations for the map
       setTaskLocations(prevLocations => [...prevLocations, {
         lat: newTask.lat,
         lng: newTask.lng,
         title: newTask.title
       }]);
-
       toast({
         title: "Success",
         description: "Task created successfully!",
@@ -231,23 +304,71 @@ export default function Homepage() {
   };
   
   const handleEditTask = (taskToEdit: Task) => {
-    toast({ title: "Edit Task", description: `Editing ${taskToEdit.title}. Feature coming soon!`});
+    console.log('Editing task:', taskToEdit);
+    setEditTask(taskToEdit);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditTaskSubmit = async (taskData: any, taskId?: string) => {
+    if (DEMO_MODE && taskId) {
+      setTasks(prev => prev.map(task =>
+        task.id === taskId ? {
+          ...task,
+          ...taskData,
+          timeRange: `${taskData.startTime} - ${taskData.endTime}`,
+          locationName: taskData.location,
+          locationAddress: taskData.location,
+        } : task
+      ));
+      toast({ title: 'Success', description: 'Task updated successfully!' });
+      setIsEditModalOpen(false);
+      setEditTask(null);
+      return;
+    }
+    if (!taskId) return;
+    try {
+      const response = await fetch(`http://localhost:8888/api/tasks/${taskId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: taskData.title,
+          description: taskData.description,
+          location_name: taskData.location,
+          lat: taskData.lat,
+          lng: taskData.lng,
+          priority: taskData.priority,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to update task');
+      fetchTasks();
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to update task.', variant: 'destructive' });
+    } finally {
+      setIsEditModalOpen(false);
+      setEditTask(null);
+    }
   };
 
   const handleDeleteTask = async (taskIdToDelete: string) => {
+    if (DEMO_MODE) {
+      setTasks(prev => prev.filter(task => task.id !== taskIdToDelete));
+      toast({ title: "Task Deleted", description: `Task has been removed.` });
+      if (selectedTaskForModal && selectedTaskForModal.id === taskIdToDelete) {
+        handleCloseModal();
+      }
+      return;
+    }
     try {
       const response = await fetch(`http://localhost:8888/api/tasks/${taskIdToDelete}`, {
         method: 'DELETE',
         credentials: 'include'
       });
-
       if (!response.ok) {
         throw new Error('Failed to delete task');
       }
-
       setTasks(prevTasks => prevTasks.filter(task => task.id !== taskIdToDelete));
-      toast({ title: "Task Deleted", description: `Task has been removed.`});
-      
+      toast({ title: "Task Deleted", description: `Task has been removed.` });
       if (selectedTaskForModal && selectedTaskForModal.id === taskIdToDelete) {
         handleCloseModal();
       }
@@ -310,6 +431,41 @@ export default function Homepage() {
     }
   };
 
+  // Helper to parse timeRange and convert to HH:mm
+  const parseTimeRange = (timeRange: string | undefined) => {
+    if (!timeRange) return { startTime: '', endTime: '' };
+    const [start, end] = timeRange.split(' - ');
+    // Convert "5:00 PM" to "17:00" etc.
+    const to24Hour = (t: string) => {
+      if (!t) return '';
+      const [time, modifier] = t.trim().split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+      if (modifier === 'PM' && hours !== 12) hours += 12;
+      if (modifier === 'AM' && hours === 12) hours = 0;
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    };
+    return {
+      startTime: to24Hour(start),
+      endTime: to24Hour(end),
+    };
+  };
+
+  // Helper to convert Task to TaskData for editing
+  const taskToTaskData = (task: Task): any => {
+    const { startTime, endTime } = parseTimeRange(task.timeRange);
+    return {
+      title: task.title,
+      duration: '', // If you have a duration field, use it; otherwise, leave blank or calculate
+      location: task.locationAddress || task.locationName || '',
+      lat: task.lat,
+      lng: task.lng,
+      startTime,
+      endTime,
+      description: task.description,
+      priority: task.priority,
+    };
+  };
+
   return (
     <div className="min-h-screen flex">
       <AppSidebar />
@@ -369,13 +525,21 @@ export default function Homepage() {
                 ) : (
                   <div className="space-y-4">
                     {tasks.map((task) => (
-                      <TaskCard 
-                        key={task.id} 
-                        task={task} 
-                        onClick={handleTaskCardClick}
-                        onToggleComplete={() => handleToggleComplete(task.id)}
-                        isActive={selectedTaskForModal?.id === task.id && !task.isCompleted}
-                      />
+                      <div key={task.id} className="relative">
+                        <TaskCard 
+                          task={task} 
+                          onClick={handleTaskCardClick}
+                          onToggleComplete={() => handleToggleComplete(task.id)}
+                          isActive={selectedTaskForModal?.id === task.id && !task.isCompleted}
+                        />
+                        <button
+                          className="absolute top-2 right-2 p-1 rounded hover:bg-gray-200"
+                          onClick={(e) => { e.stopPropagation(); handleEditTask(task); }}
+                          title="Edit Task"
+                        >
+                          <Pencil size={18} />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -412,6 +576,23 @@ export default function Homepage() {
         isOpen={isNewTaskModalOpen}
         onClose={() => setIsNewTaskModalOpen(false)}
         onSubmit={handleNewTaskSubmit}
+      />
+      <NewTaskModal
+        isOpen={isEditModalOpen}
+        onClose={() => { setIsEditModalOpen(false); setEditTask(null); }}
+        onSubmit={handleEditTaskSubmit}
+        initialData={editTask ? taskToTaskData(editTask) : undefined}
+        taskId={editTask?.id}
+      />
+      <PendingTasksModal
+        open={showPendingModal && hasPendingTasks}
+        onClose={() => setShowPendingModal(false)}
+        onTasksCompleted={() => {
+          setShowPendingModal(false);
+          setHasPendingTasks(false);
+          // Optionally refetch tasks
+          window.location.reload();
+        }}
       />
     </div>
   );

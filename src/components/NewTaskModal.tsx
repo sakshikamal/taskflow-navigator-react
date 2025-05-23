@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,9 @@ import { Autocomplete } from '@react-google-maps/api';
 interface NewTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (taskData: TaskData) => void;
+  onSubmit: (taskData: TaskData, taskId?: string) => void;
+  initialData?: TaskData;
+  taskId?: string;
 }
 
 interface TaskData {
@@ -32,7 +34,7 @@ interface TaskData {
   priority: number;
 }
 
-export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModalProps) {
+export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, taskId }: NewTaskModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<TaskData>({
     title: '',
@@ -48,6 +50,25 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
 
   const [errors, setErrors] = useState<Partial<Record<keyof TaskData, string>>>({});
   const locationAutoRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  // Populate form with initialData if editing
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    } else {
+      setFormData({
+        title: '',
+        duration: '',
+        location: '',
+        lat: undefined,
+        lng: undefined,
+        startTime: '',
+        endTime: '',
+        description: '',
+        priority: 2,
+      });
+    }
+  }, [initialData, isOpen]);
 
   const onLoadLocation = (autocomplete: google.maps.places.Autocomplete) => {
     locationAutoRef.current = autocomplete;
@@ -128,9 +149,8 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (validateForm()) {
-      onSubmit(formData);
+      onSubmit(formData, taskId);
       setFormData({
         title: '',
         duration: '',
@@ -144,16 +164,15 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
       });
       onClose();
       toast({
-        title: "Task Created",
-        description: "Your new task has been added successfully.",
+        title: taskId ? "Task Updated" : "Task Created",
+        description: taskId ? "Your task has been updated successfully." : "Your new task has been added successfully.",
       });
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} modal={false}>
-      <DialogContent
-        className="sm:max-w-[550px] bg-white"
+      <DialogContent className="sm:max-w-[550px] w-full bg-white max-h-[90vh] overflow-y-auto"
         onInteractOutside={event => {
           if (
             event.target instanceof HTMLElement &&
@@ -165,7 +184,7 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
       >
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-[rgb(0,74,173)]">
-            Add New Task
+            {taskId ? 'Edit Task' : 'Add New Task'}
           </DialogTitle>
         </DialogHeader>
         
@@ -221,12 +240,13 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
                 <input
                   id="location"
                   name="location"
-                  value={formData.location}
+                  value={formData.location || ''}
                   onChange={handleChange}
                   className={`w-full px-4 py-2 rounded-lg border ${
                     errors.location ? 'border-red-500' : 'border-gray-200'
                   } focus:ring-2 focus:ring-[rgb(93,224,230)] focus:border-[rgb(93,224,230)]`}
                   placeholder="Enter location"
+                  autoComplete="off"
                 />
               </Autocomplete>
               {errors.location && <p className="text-sm text-red-500">{errors.location}</p>}
@@ -319,7 +339,7 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
               type="submit"
               className="flex-1 bg-[rgb(0,74,173)] hover:bg-[rgb(93,224,230)] text-white"
             >
-              Add Task
+              {taskId ? 'Update Task' : 'Add Task'}
             </Button>
           </DialogFooter>
         </form>
