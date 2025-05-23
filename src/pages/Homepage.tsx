@@ -27,58 +27,12 @@ export interface Task {
   priority: number;
 }
 
-const DEMO_MODE = true;
-
 export default function Homepage() {
   const { isAuthenticated, loading, user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [tasks, setTasks] = useState<Task[]>(DEMO_MODE ? [
-    {
-      id: '1',
-      title: 'Go to gym',
-      timeRange: '5:00 PM - 5:45 PM',
-      lat: 33.659,
-      lng: -117.86,
-      transitMode: 'car',
-      isCompleted: false,
-      description: 'Evening workout session',
-      locationName: 'UCI ARC',
-      locationAddress: '680 California Ave, Irvine, CA',
-      priority: 1,
-    },
-    {
-      id: '2',
-      title: 'Buy groceries',
-      timeRange: '6:00 PM - 6:30 PM',
-      lat: 33.670,
-      lng: -117.85,
-      transitMode: 'car',
-      isCompleted: false,
-      description: 'Pick up groceries for dinner',
-      locationName: 'Trader Joe\'s',
-      locationAddress: '4225 Campus Dr, Irvine, CA',
-      priority: 2,
-    },
-    {
-      id: '3',
-      title: 'Call Mom',
-      timeRange: '7:00 PM - 7:30 PM',
-      lat: 33.660,
-      lng: -117.87,
-      transitMode: 'walk',
-      isCompleted: false,
-      description: 'Weekly catch-up call',
-      locationName: 'Home',
-      locationAddress: '123 Main St, Irvine, CA',
-      priority: 3,
-    },
-  ] : []);
-  const [taskLocations, setTaskLocations] = useState<{ lat: number; lng: number; title: string }[]>(DEMO_MODE ? [
-    { lat: 33.659, lng: -117.86, title: 'UCI ARC' },
-    { lat: 33.670, lng: -117.85, title: 'Trader Joe\'s' },
-    { lat: 33.660, lng: -117.87, title: 'Home' },
-  ] : []);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskLocations, setTaskLocations] = useState<{ lat: number; lng: number; title: string }[]>([]);
 
   const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -94,9 +48,7 @@ export default function Homepage() {
     return <Navigate to="/login" replace />;
   }
 
-  // Move fetchTasks to top level
   const fetchTasks = async () => {
-    if (DEMO_MODE) return;
     if (!isAuthenticated) return;
     setIsLoading(true);
     try {
@@ -139,10 +91,9 @@ export default function Homepage() {
   };
 
   useEffect(() => {
-    if (!DEMO_MODE) fetchTasks();
+    fetchTasks();
   }, [isAuthenticated, toast]);
 
-  // Fetch pending tasks on mount
   useEffect(() => {
     fetch('http://localhost:8888/api/pending_tasks', { credentials: 'include' })
       .then(res => res.json())
@@ -152,7 +103,11 @@ export default function Homepage() {
           setShowPendingModal(true);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Failed to load pending tasks:', err);
+        setHasPendingTasks(false);
+        setShowPendingModal(false);
+      });
   }, []);
 
   const handleTaskCardClick = (task: Task) => {
@@ -166,15 +121,6 @@ export default function Homepage() {
   };
 
   const handleToggleComplete = async (taskId: string) => {
-    if (DEMO_MODE) {
-      setTasks(prev => prev.map(task =>
-        task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
-      ));
-      if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
-        setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null);
-      }
-      return;
-    }
     try {
       const response = await fetch(`http://localhost:8888/api/tasks/${taskId}/toggle`, {
         method: 'POST',
@@ -204,27 +150,7 @@ export default function Homepage() {
   };
 
   const handleNewTaskSubmit = async (taskData: any) => {
-    if (DEMO_MODE) {
-      const newTask: Task = {
-        id: Date.now().toString(),
-        title: taskData.title,
-        timeRange: `${taskData.startTime} - ${taskData.endTime}`,
-        lat: taskData.lat || 33.659,
-        lng: taskData.lng || -117.86,
-        transitMode: taskData.transitMode || 'car',
-        isCompleted: false,
-        description: taskData.description || '',
-        locationName: taskData.location,
-        locationAddress: taskData.location,
-        priority: taskData.priority || 1,
-      };
-      setTasks(prev => [...prev, newTask]);
-      setTaskLocations(prev => [...prev, { lat: newTask.lat, lng: newTask.lng, title: newTask.title }]);
-      toast({ title: "Success", description: "Task created successfully!" });
-      return;
-    }
     try {
-      // Convert time strings to ISO format
       const today = new Date();
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -310,21 +236,6 @@ export default function Homepage() {
   };
 
   const handleEditTaskSubmit = async (taskData: any, taskId?: string) => {
-    if (DEMO_MODE && taskId) {
-      setTasks(prev => prev.map(task =>
-        task.id === taskId ? {
-          ...task,
-          ...taskData,
-          timeRange: `${taskData.startTime} - ${taskData.endTime}`,
-          locationName: taskData.location,
-          locationAddress: taskData.location,
-        } : task
-      ));
-      toast({ title: 'Success', description: 'Task updated successfully!' });
-      setIsEditModalOpen(false);
-      setEditTask(null);
-      return;
-    }
     if (!taskId) return;
     try {
       const response = await fetch(`http://localhost:8888/api/tasks/${taskId}`, {
@@ -351,14 +262,6 @@ export default function Homepage() {
   };
 
   const handleDeleteTask = async (taskIdToDelete: string) => {
-    if (DEMO_MODE) {
-      setTasks(prev => prev.filter(task => task.id !== taskIdToDelete));
-      toast({ title: "Task Deleted", description: `Task has been removed.` });
-      if (selectedTaskForModal && selectedTaskForModal.id === taskIdToDelete) {
-        handleCloseModal();
-      }
-      return;
-    }
     try {
       const response = await fetch(`http://localhost:8888/api/tasks/${taskIdToDelete}`, {
         method: 'DELETE',
@@ -416,7 +319,6 @@ export default function Homepage() {
           title: "Success",
           description: "Schedule re-optimized successfully!",
         });
-        // Refresh tasks
         window.location.reload();
       } else {
         throw new Error(data.error || "Reoptimization failed");
@@ -431,11 +333,9 @@ export default function Homepage() {
     }
   };
 
-  // Helper to parse timeRange and convert to HH:mm
   const parseTimeRange = (timeRange: string | undefined) => {
     if (!timeRange) return { startTime: '', endTime: '' };
     const [start, end] = timeRange.split(' - ');
-    // Convert "5:00 PM" to "17:00" etc.
     const to24Hour = (t: string) => {
       if (!t) return '';
       const [time, modifier] = t.trim().split(' ');
@@ -450,12 +350,11 @@ export default function Homepage() {
     };
   };
 
-  // Helper to convert Task to TaskData for editing
   const taskToTaskData = (task: Task): any => {
     const { startTime, endTime } = parseTimeRange(task.timeRange);
     return {
       title: task.title,
-      duration: '', // If you have a duration field, use it; otherwise, leave blank or calculate
+      duration: '',
       location: task.locationAddress || task.locationName || '',
       lat: task.lat,
       lng: task.lng,
@@ -590,7 +489,6 @@ export default function Homepage() {
         onTasksCompleted={() => {
           setShowPendingModal(false);
           setHasPendingTasks(false);
-          // Optionally refetch tasks
           window.location.reload();
         }}
       />
