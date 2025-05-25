@@ -96,3 +96,11 @@
   animation: blink 1s step-end infinite;
 }
 
+@keyframes bounce-short {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+.animate-bounce-short {
+  animation: bounce-short 2.5s ease-in-out infinite;
+}
+

@@ -136,7 +136,17 @@ export default function Preferences() {
         const err = await resp.json();
         throw new Error(err.error || resp.statusText);
       }
+      // Save preferences to localStorage for profile page
+      localStorage.setItem('calroute_preferences', JSON.stringify({
+        transportation: transportModes,
+        homeAddress: homeAddress,
+        groceryStores: groceryStores,
+        workHours: workHours,
+        gymAddress: gymAddress,
+        taskPrioritization: prioritizationStyle,
+      }));
       toast({ title: 'Saved!', description: 'Your preferences were stored.' });
+      // Redirect to homepage
       navigate('/homepage');
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Error', description: err.message });
@@ -356,7 +366,7 @@ export default function Preferences() {
                 size="lg" 
                 className="bg-[rgb(0,74,173)] hover:bg-[rgb(93,224,230)] text-white px-10 py-6 text-lg font-semibold transition-colors duration-200"
               >
-                Save Preferences & Continue
+                Save Preferences
               </Button>
             </CardFooter>
           </form>

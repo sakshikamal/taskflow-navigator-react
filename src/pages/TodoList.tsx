@@ -1,4 +1,3 @@
-
 import { AppSidebar } from '@/components/AppSidebar';
 
 export default function TodoList() {
@@ -13,7 +12,19 @@ export default function TodoList() {
           </header>
           
           <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-center text-gray-500 my-12">TodoList feature coming soon...</p>
+            <div className="flex justify-center">
+              <iframe
+                src="https://todoist.com/showProject?id=2203306141"
+                style={{ border: 0 }}
+                width="800"
+                height="600"
+                frameBorder="0"
+                scrolling="yes"
+                title="Todoist Demo"
+                className="rounded-lg shadow"
+                allowFullScreen
+              ></iframe>
+            </div>
           </div>
         </div>
       </div>
