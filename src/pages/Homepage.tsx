@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Map from '@/components/Map';
 import TaskCard from '@/components/TaskCard';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, RefreshCw as Sync } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
+import Preferences from '@/pages/Preferences';
 
 export interface Task {
   id: string;
@@ -26,72 +27,153 @@ export interface Task {
   priority: number;
 }
 
+// Replace demoTasks with the new hardcoded tasks as specified by the user
+const demoTasks: Task[] = [
+  // Image 1 tasks
+  {
+    id: '1',
+    title: 'CS Seminar',
+    timeRange: '11:00 AM - 12:00 PM',
+    lat: 33.6436, // Donald Bren Hall
+    lng: -117.8426,
+    transitMode: 'bike',
+    isCompleted: false,
+    description: 'Donald Bren Hall (DBH)',
+    locationName: 'Donald Bren Hall (DBH)',
+    locationAddress: 'Donald Bren Hall, UC Irvine, CA',
+    priority: 1,
+  },
+  {
+    id: '2',
+    title: 'ML Class',
+    timeRange: '1:00 PM - 2:15 PM',
+    lat: 33.6492, // HICF 100P
+    lng: -117.8445,
+    transitMode: 'bike',
+    isCompleted: false,
+    description: 'HICF 100P',
+    locationName: 'HICF 100P',
+    locationAddress: 'HICF 100P, UC Irvine, CA',
+    priority: 1,
+  },
+  {
+    id: '3',
+    title: 'PDC Discussion',
+    timeRange: '2:45 PM - 3:45 PM',
+    lat: 33.6465, // Steinhaus Hall
+    lng: -117.8441,
+    transitMode: 'walk',
+    isCompleted: false,
+    description: 'Steinhaus Hall',
+    locationName: 'Steinhaus Hall',
+    locationAddress: 'Steinhaus Hall, UC Irvine, CA',
+    priority: 1,
+  },
+  {
+    id: '4',
+    title: 'Meeting with Professor',
+    timeRange: '5:30 PM - 6:30 PM',
+    lat: 33.65058510010861,
+    lng: -117.8375080507119,
+    transitMode: 'car',
+    isCompleted: false,
+    description: 'Paul Merage School of Business',
+    locationName: 'Paul Merage School of Business',
+    locationAddress: '4291 Pereira Dr, Irvine, CA 92697, USA',
+    priority: 1,
+  },
+  // Image 2 tasks
+  {
+    id: '5',
+    title: 'Pick up Groceries',
+    timeRange: '4:30 PM - 5:00 PM',
+    lat: 33.64668965405487,
+    lng: -117.83810980438808,
+    transitMode: 'car',
+    isCompleted: false,
+    description: "Grocery List: Milk, Eggs, Bread, Apples, Spinach",
+    locationName: "Trader Joe's",
+    locationAddress: '4225 Campus Dr, Irvine, CA 92612',
+    priority: 3,
+  },
+  {
+    id: '6',
+    title: 'Speak to Mom',
+    timeRange: '10:00 PM - 10:30 PM',
+    lat: 33.64768098483347,
+    lng: -117.83150707005395,
+    transitMode: 'walk',
+    isCompleted: false,
+    description: 'Call Mom at 76000 Verano road',
+    locationName: '76000 Verano Rd S',
+    locationAddress: '76000 Verano Rd S, Irvine, CA',
+    priority: 2,
+  },
+  {
+    id: '7',
+    title: 'Go to Gym',
+    timeRange: '10:30 PM - 12:00 AM',
+    lat: 33.643602412241094,
+    lng: -117.82790543554184,
+    transitMode: 'bike',
+    isCompleted: false,
+    description: 'Anteater Recreation Centre\nDuration: 1.5 hours',
+    locationName: 'Anteater Recreation Centre',
+    locationAddress: '680 California Ave, Irvine, CA 92617, United States',
+    priority: 2,
+  },
+];
+
+function parseTimeToMinutes(timeStr: string) {
+  // Expects '5:00 PM' or '17:00'
+  if (!timeStr) return 0;
+  let [time, modifier] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+  if (modifier) {
+    if (modifier === 'PM' && hours !== 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+  }
+  return hours * 60 + minutes;
+}
+
+function getStartMinutes(task: Task) {
+  if (!task.timeRange) return 0;
+  const [start] = task.timeRange.split(' - ');
+  return parseTimeToMinutes(start);
+}
+
+// Add a helper to format time to 12-hour format
+function formatTo12Hour(time: string) {
+  if (!time) return '';
+  let [hour, minute] = time.split(':').map(Number);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12;
+  if (hour === 0) hour = 12;
+  return `${hour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+}
+
 export default function Homepage() {
   const { isAuthenticated, loading, user } = useAuth();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [taskLocations, setTaskLocations] = useState<{ lat: number; lng: number; title: string }[]>([]);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>(demoTasks);
   const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [editTask, setEditTask] = useState<Task | null>(null);
 
   if (loading) return <div>Loading...</div>;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  // Always keep tasks ordered by start time
+  const sortedTasks = [...tasks].sort((a, b) => getStartMinutes(a) - getStartMinutes(b));
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      if (!isAuthenticated) return;
-      
-      setIsLoading(true);
-      try {
-        const response = await fetch('http://localhost:8888/api/tasks', {
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch tasks');
-        }
+  // Update taskLocations to match sortedTasks, but only include incomplete tasks
+  const taskLocations = sortedTasks.filter(t => !t.isCompleted).map(t => ({ lat: t.lat, lng: t.lng, title: t.title }));
 
-        const data = await response.json();
-        const formattedTasks = data.tasks.map((task: any) => ({
-          id: task.id,
-          title: task.title,
-          timeRange: `${task.start_time} - ${task.end_time}`,
-          lat: task.lat,
-          lng: task.lng,
-          transitMode: task.transit_mode || 'car',
-          isCompleted: task.is_completed || false,
-          description: task.description || '',
-          locationName: task.location_name,
-          locationAddress: task.location_address,
-          priority: task.priority || 1
-        }));
-
-        setTasks(formattedTasks);
-        setTaskLocations(formattedTasks.map(task => ({
-          lat: task.lat,
-          lng: task.lng,
-          title: task.title
-        })));
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load tasks. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTasks();
-  }, [isAuthenticated, toast]);
+  // Find the index of the 'PDC Discussion' task for highlighting
+  const currentTaskId = sortedTasks.find(t => t.title.toLowerCase().includes('pdc discussion'))?.id;
 
   const handleTaskCardClick = (task: Task) => {
     setSelectedTaskForModal(task);
@@ -103,31 +185,12 @@ export default function Homepage() {
     setSelectedTaskForModal(null);
   };
 
-  const handleToggleComplete = async (taskId: string) => {
-    try {
-      const response = await fetch(`http://localhost:8888/api/tasks/${taskId}/toggle`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to toggle task completion');
-      }
-
-      setTasks(currentTasks => currentTasks.map(task => 
-        task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
-      ));
-
-      if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
-        setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null);
-      }
-    } catch (error) {
-      console.error('Error toggling task completion:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update task status. Please try again.",
-        variant: "destructive"
-      });
+  const handleToggleComplete = (taskId: string) => {
+    setTasks(prev => prev.map(task =>
+      task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
+    ));
+    if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
+      setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null);
     }
   };
 
@@ -135,179 +198,92 @@ export default function Homepage() {
     setIsNewTaskModalOpen(true);
   };
 
-  const handleNewTaskSubmit = async (taskData: any) => {
-    try {
-      // Convert time strings to ISO format
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      let startTime = null;
-      let endTime = null;
-
-      if (taskData.startTime && taskData.endTime) {
-        // Parse the time strings
-        const [startHours, startMinutes] = taskData.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = taskData.endTime.split(':').map(Number);
-
-        // Create Date objects
-        startTime = new Date(today);
-        startTime.setHours(startHours, startMinutes, 0);
-        
-        endTime = new Date(today);
-        endTime.setHours(endHours, endMinutes, 0);
-
-        // If end time is earlier than start time, set it to tomorrow
-        if (endTime <= startTime) {
-          endTime = new Date(tomorrow);
-          endTime.setHours(endHours, endMinutes, 0);
-        }
-      }
-
-      const response = await fetch('http://localhost:8888/api/tasks', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: taskData.title,
-          description: taskData.description,
-          location_name: taskData.location,
-          location_address: taskData.location,
-          lat: taskData.lat,
-          lng: taskData.lng,
-          start_time: startTime?.toISOString(),
-          end_time: endTime?.toISOString(),
-          duration: parseInt(taskData.duration, 10),
-          priority: taskData.priority,
-          transit_mode: taskData.transitMode || 'car'
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create task');
-      }
-
-      const newTask = await response.json();
-      setTasks(prevTasks => [...prevTasks, {
-        id: newTask.id,
-        title: newTask.title,
-        timeRange: `${newTask.start_time} - ${newTask.end_time}`,
-        lat: newTask.lat,
-        lng: newTask.lng,
-        transitMode: newTask.transit_mode || 'car',
-        isCompleted: false,
-        description: newTask.description || '',
-        locationName: newTask.location_name,
-        locationAddress: newTask.location_address,
-        priority: newTask.priority || 1
-      }]);
-
-      // Update task locations for the map
-      setTaskLocations(prevLocations => [...prevLocations, {
-        lat: newTask.lat,
-        lng: newTask.lng,
-        title: newTask.title
-      }]);
-
-      toast({
-        title: "Success",
-        description: "Task created successfully!",
-      });
-    } catch (error) {
-      console.error('Error creating task:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create task. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSyncCalendar = () => {
-    toast({ title: "Sync Calendar/Todoist", description: "This feature is coming soon!" });
-  };
-  
   const handleEditTask = (taskToEdit: Task) => {
-    toast({ title: "Edit Task", description: `Editing ${taskToEdit.title}. Feature coming soon!`});
+    setEditTask(taskToEdit);
+    setIsNewTaskModalOpen(true);
   };
 
-  const handleDeleteTask = async (taskIdToDelete: string) => {
-    try {
-      const response = await fetch(`http://localhost:8888/api/tasks/${taskIdToDelete}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete task');
-      }
-
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskIdToDelete));
+  const handleDeleteTask = (taskIdToDelete: string) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setTasks(prev => prev.filter(task => task.id !== taskIdToDelete));
       toast({ title: "Task Deleted", description: `Task has been removed.`});
-      
       if (selectedTaskForModal && selectedTaskForModal.id === taskIdToDelete) {
         handleCloseModal();
       }
-    } catch (error) {
-      console.error('Error deleting task:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete task. Please try again.",
-        variant: "destructive"
-      });
-    }
+      setIsLoading(false);
+    }, 1000);
   };
 
-  const handleDynamicSchedule = async () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Error",
-        description: "Geolocation is not supported by your browser.",
-        variant: "destructive"
-      });
-      return;
-    }
-  
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      });
-
-      const response = await fetch("http://localhost:8888/api/dynamic_schedule", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          lat: position.coords.latitude, 
-          lng: position.coords.longitude 
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        toast({
-          title: "Success",
-          description: "Schedule re-optimized successfully!",
+  const handleSync = () => {
+    setIsSyncing(true);
+    setTimeout(() => {
+      // Add 'Urgent work' task if not already present
+      const urgentTaskExists = tasks.some(t => t.title === 'Urgent work');
+      let updatedTasks = [...tasks];
+      if (!urgentTaskExists) {
+        updatedTasks.push({
+          id: (Date.now() + 100).toString(),
+          title: 'Urgent work',
+          timeRange: '4:00 PM - 5:00 PM',
+          lat: 33.6497, // Humanities Interim Classroom Facility (approximate)
+          lng: -117.8442,
+          transitMode: 'walk',
+          isCompleted: false,
+          description: 'Humanities Interim Classroom Facility',
+          locationName: 'Humanities Interim Classroom Facility',
+          locationAddress: 'Humanities Interim Classroom Facility, UC Irvine, CA',
+          priority: 1,
         });
-        // Refresh tasks
-        window.location.reload();
-      } else {
-        throw new Error(data.error || "Reoptimization failed");
       }
-    } catch (error) {
-      console.error("Dynamic schedule error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to reoptimize schedule. Please try again.",
-        variant: "destructive"
-      });
-    }
+      // Move 'Pick up Groceries' to after 6:30 PM
+      updatedTasks = updatedTasks.map(t =>
+        t.title === 'Pick up Groceries'
+          ? { ...t, timeRange: '6:45 PM - 7:15 PM' }
+          : t
+      );
+      setTasks(updatedTasks);
+      setIsSyncing(false);
+      toast({ title: "Synced!", description: "Calendar and Todoist tasks have been synced." });
+    }, 2000);
+  };
+
+  const handleNewTaskSubmit = async (taskData: any, isEdit?: boolean) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      if (isEdit && editTask) {
+        // Update existing task
+        const updatedTasks = tasks.map(t => t.id === editTask.id ? {
+          ...t,
+          ...taskData,
+          timeRange: `${formatTo12Hour(taskData.startTime)} - ${formatTo12Hour(taskData.endTime)}`,
+          locationName: taskData.location,
+          locationAddress: taskData.location,
+        } : t);
+        setTasks(updatedTasks);
+        toast({ title: "Success", description: "Task updated successfully!" });
+      } else {
+        // Add new task
+        const newTask: Task = {
+          id: Date.now().toString(),
+          title: taskData.title,
+          timeRange: `${formatTo12Hour(taskData.startTime)} - ${formatTo12Hour(taskData.endTime)}`,
+          lat: taskData.lat || 33.659,
+          lng: taskData.lng || -117.86,
+          transitMode: taskData.transitMode || 'car',
+          isCompleted: false,
+          description: taskData.description || '',
+          locationName: taskData.location,
+          locationAddress: taskData.location,
+          priority: taskData.priority || 1,
+        };
+        const updatedTasks = [...tasks, newTask].sort((a, b) => getStartMinutes(a) - getStartMinutes(b));
+        setTasks(updatedTasks);
+        toast({ title: "Success", description: "Task created successfully!" });
+      }
+      setIsLoading(false);
+      setEditTask(null);
+    }, 1000);
   };
 
   return (
@@ -331,63 +307,55 @@ export default function Homepage() {
                   <p className="text-lg sm:text-xl text-white/90">Here's your optimized schedule for today</p>
                 </div>
               </div>
-              <div>
-                <Button 
-                  variant="outline" 
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm whitespace-nowrap"
-                  onClick={handleSyncCalendar}
-                >
-                  <Sync className="mr-2 h-4 w-4" /> 
-                  <span className="hidden sm:inline">Sync Calendar/Todoist</span>
-                  <span className="sm:hidden">Sync</span>
-                </Button> 
-              </div>
+              <Button
+                className="bg-white border border-[rgb(0,74,173)] text-[rgb(0,74,173)] hover:bg-[rgb(93,224,230)]/20 transition-colors duration-200 flex items-center gap-2"
+                onClick={handleSync}
+                disabled={isSyncing}
+              >
+                {isSyncing ? <Spinner className="mr-2" size="sm" /> : <Sync className="mr-2 h-4 w-4" />}
+                Sync Calendar/Todoist
+              </Button>
             </div>
           </header>
-          
           <div className="mb-6 p-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
             <p className="text-gray-700">Your schedule has been optimized for maximum efficiency. Total travel time: 45 minutes.</p>
           </div> 
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-white/20">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-semibold text-gray-800">Today's Tasks</h2>
-                  <Button 
-                    className="bg-[rgb(0,74,173)] text-white hover:bg-[rgb(93,224,230)] transition-colors duration-200"
-                    onClick={handleAddNewTask}
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
-                  </Button> 
+                  <div className="flex gap-2">
+                    <Button 
+                      className="bg-[rgb(0,74,173)] text-white hover:bg-[rgb(93,224,230)] transition-colors duration-200"
+                      onClick={handleAddNewTask}
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
+                    </Button>
+                  </div>
                 </div>
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center py-8">
                     <Spinner className="text-[rgb(0,74,173)]" size="lg" />
-                    <p className="mt-4 text-gray-600">Optimizing your route...</p>
+                    <p className="mt-4 text-gray-600">Optimizing schedule...</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {tasks.map((task) => (
+                    {sortedTasks.map((task, idx) => (
                       <TaskCard 
                         key={task.id} 
                         task={task} 
                         onClick={handleTaskCardClick}
                         onToggleComplete={() => handleToggleComplete(task.id)}
                         isActive={selectedTaskForModal?.id === task.id && !task.isCompleted}
+                        isCurrent={task.id === currentTaskId && !task.isCompleted}
+                        index={idx}
                       />
                     ))}
                   </div>
                 )}
               </div>
-              <button
-                    onClick={handleDynamicSchedule}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    Reoptimize Schedule
-                  </button>
             </div>
-
             <div>
               <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">Your Route Today</h2>
@@ -410,8 +378,21 @@ export default function Homepage() {
       )}
       <NewTaskModal
         isOpen={isNewTaskModalOpen}
-        onClose={() => setIsNewTaskModalOpen(false)}
+        onClose={() => { setIsNewTaskModalOpen(false); setEditTask(null); }}
         onSubmit={handleNewTaskSubmit}
+        initialData={editTask ? {
+          title: editTask.title,
+          duration: '', // You may want to parse from timeRange
+          location: editTask.locationName || '',
+          lat: editTask.lat,
+          lng: editTask.lng,
+          startTime: editTask.timeRange.split(' - ')[0]?.trim(),
+          endTime: editTask.timeRange.split(' - ')[1]?.trim(),
+          description: editTask.description,
+          priority: editTask.priority,
+          transitMode: editTask.transitMode,
+        } : undefined}
+        isEdit={!!editTask}
       />
     </div>
   );

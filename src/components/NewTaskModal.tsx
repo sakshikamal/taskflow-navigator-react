@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,9 @@ import { Autocomplete } from '@react-google-maps/api';
 interface NewTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (taskData: TaskData) => void;
+  onSubmit: (taskData: TaskData, isEdit?: boolean) => void;
+  initialData?: TaskData | null;
+  isEdit?: boolean;
 }
 
 interface TaskData {
@@ -30,11 +32,12 @@ interface TaskData {
   endTime?: string;
   description?: string;
   priority: number;
+  transitMode?: string;
 }
 
-export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModalProps) {
+export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData = null, isEdit = false }: NewTaskModalProps) {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<TaskData>({
+  const [formData, setFormData] = useState<TaskData>(initialData || {
     title: '',
     duration: '',
     location: '',
@@ -43,7 +46,8 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
     startTime: '',
     endTime: '',
     description: '',
-    priority: 2, // Default priority
+    priority: 2,
+    transitMode: 'car',
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof TaskData, string>>>({});
@@ -126,11 +130,26 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
     return Object.keys(newErrors).length === 0;
   };
 
+  // Reset form when modal opens/closes or initialData changes
+  useEffect(() => {
+    setFormData(initialData || {
+      title: '',
+      duration: '',
+      location: '',
+      lat: undefined,
+      lng: undefined,
+      startTime: '',
+      endTime: '',
+      description: '',
+      priority: 2,
+      transitMode: 'car',
+    });
+  }, [isOpen, initialData]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (validateForm()) {
-      onSubmit(formData);
+      onSubmit(formData, isEdit);
       setFormData({
         title: '',
         duration: '',
@@ -141,11 +160,12 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
         endTime: '',
         description: '',
         priority: 2,
+        transitMode: 'car',
       });
       onClose();
       toast({
-        title: "Task Created",
-        description: "Your new task has been added successfully.",
+        title: isEdit ? "Task Updated" : "Task Created",
+        description: isEdit ? "Your task has been updated." : "Your new task has been added successfully.",
       });
     }
   };
@@ -165,7 +185,7 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
       >
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-[rgb(0,74,173)]">
-            Add New Task
+            {isEdit ? 'Edit Task' : 'Add New Task'}
           </DialogTitle>
         </DialogHeader>
         
@@ -282,6 +302,25 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
             />
           </div>
 
+          {/* Transit Mode Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="transitMode" className="text-base font-semibold text-gray-700 flex items-center gap-2">
+              Transit Mode
+            </Label>
+            <select
+              id="transitMode"
+              name="transitMode"
+              value={formData.transitMode}
+              onChange={handleChange}
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[rgb(93,224,230)] focus:border-[rgb(93,224,230)]"
+            >
+              <option value="car">Car</option>
+              <option value="bike">Bike</option>
+              <option value="bus">Bus</option>
+              <option value="walk">Walk</option>
+            </select>
+          </div>
+
           {/* Priority Selection */}
           <div className="space-y-2">
             <Label className="text-base font-semibold text-gray-700 flex items-center gap-2">
@@ -319,7 +358,7 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit }: NewTaskModal
               type="submit"
               className="flex-1 bg-[rgb(0,74,173)] hover:bg-[rgb(93,224,230)] text-white"
             >
-              Add Task
+              {isEdit ? 'Update Task' : 'Add Task'}
             </Button>
           </DialogFooter>
         </form>
