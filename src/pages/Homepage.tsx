@@ -41,6 +41,7 @@ export default function Homepage() {
   const [hasPendingTasks, setHasPendingTasks] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [bounceTick, setBounceTick] = useState(0);
 
   if (loading) return <div>Loading...</div>;
 
@@ -113,6 +114,13 @@ export default function Homepage() {
         setHasPendingTasks(false);
         setShowPendingModal(false);
       });
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBounceTick(tick => tick + 1);
+    }, 2000); // every 2 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const handleTaskCardClick = (task: Task) => {
@@ -383,6 +391,41 @@ export default function Homepage() {
     };
   };
 
+  // Find the next upcoming task index
+  let nextUpcomingIndex = -1;
+  let soonestStart: Date | null = null;
+  const now = new Date();
+  tasks.forEach((task, idx) => {
+    if (task.timeRange) {
+      const [start] = task.timeRange.split(' - ');
+      const parseTime = (t) => {
+        if (!t) return null;
+        const [time, modifier] = t.trim().split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        if (modifier === 'PM' && hours !== 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+        const d = new Date(now);
+        d.setHours(hours, minutes, 0, 0);
+        return d;
+      };
+      const startTime = parseTime(start);
+      if (startTime && startTime > now && (!soonestStart || startTime < soonestStart)) {
+        soonestStart = startTime;
+        nextUpcomingIndex = idx;
+      }
+    }
+  });
+
+  // Get home address from localStorage
+  let homeAddress = '';
+  try {
+    const prefs = localStorage.getItem('calroute_preferences');
+    if (prefs) {
+      const parsed = JSON.parse(prefs);
+      homeAddress = parsed.homeAddress || '';
+    }
+  } catch {}
+
   return (
     <div className="min-h-screen flex">
       <AppSidebar />
@@ -428,7 +471,7 @@ export default function Homepage() {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-semibold text-gray-800">Today's Tasks</h2>
                   <Button 
-                    className="bg-[rgb(0,74,173)] text-white hover:bg-[rgb(93,224,230)] transition-colors duration-200"
+                    className="bg-[rgb(0,74,173)] text-white hover:bg-[rgb(93,224,230)] transition-colors duration-200 px-3 py-2 text-sm sm:px-6 sm:py-3 sm:text-base"
                     onClick={handleAddNewTask}
                   >
                     <PlusCircle className="mr-2 h-4 w-4" /> Add New Task
@@ -441,23 +484,28 @@ export default function Homepage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {tasks.map((task) => (
-                      <div key={task.id} className="relative">
-                        <TaskCard 
-                          task={task} 
-                          onClick={handleTaskCardClick}
-                          onToggleComplete={() => handleToggleComplete(task.id)}
-                          isActive={selectedTaskForModal?.id === task.id && !task.isCompleted}
-                        />
-                        <button
-                          className="absolute top-2 right-2 p-1 rounded hover:bg-gray-200"
-                          onClick={(e) => { e.stopPropagation(); handleEditTask(task); }}
-                          title="Edit Task"
-                        >
-                          <Pencil size={18} />
-                        </button>
-                      </div>
-                    ))}
+                    {tasks.map((task, index) => {
+                      const isCurrent = index === nextUpcomingIndex;
+                      return (
+                        <div key={isCurrent ? `bouncy-${task.id}-${bounceTick}` : task.id} className="relative">
+                          <TaskCard 
+                            task={task} 
+                            onClick={handleTaskCardClick}
+                            onToggleComplete={() => handleToggleComplete(task.id)}
+                            isActive={selectedTaskForModal?.id === task.id && !task.isCompleted}
+                            isCurrent={isCurrent}
+                            index={index}
+                          />
+                          <button
+                            className="absolute top-2 right-2 p-1 rounded hover:bg-gray-200"
+                            onClick={(e) => { e.stopPropagation(); handleEditTask(task); }}
+                            title="Edit Task"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -487,6 +535,8 @@ export default function Homepage() {
           task={selectedTaskForModal}
           onEdit={handleEditTask}
           onDelete={handleDeleteTask}
+          tasks={tasks}
+          homeAddress={homeAddress}
         />
       )}
       <NewTaskModal

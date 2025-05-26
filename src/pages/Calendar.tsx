@@ -1,4 +1,3 @@
-
 import { AppSidebar } from '@/components/AppSidebar';
 
 export default function Calendar() {
@@ -13,7 +12,19 @@ export default function Calendar() {
           </header>
           
           <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-center text-gray-500 my-12">Calendar feature coming soon...</p>
+            <div className="flex justify-center">
+              <iframe
+                src="https://calendar.google.com/calendar/embed?src=en.indian%23holiday%40group.v.calendar.google.com&ctz=America%2FNew_York"
+                style={{ border: 0 }}
+                width="800"
+                height="600"
+                frameBorder="0"
+                scrolling="no"
+                title="Google Calendar Demo"
+                className="rounded-lg shadow"
+                allowFullScreen
+              ></iframe>
+            </div>
           </div>
         </div>
       </div>

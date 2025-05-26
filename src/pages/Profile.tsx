@@ -191,10 +191,9 @@ export default function Profile() {
                         onClick={handleEditPreferences}
                         className="bg-[rgb(0,74,173)] hover:bg-[rgb(93,224,230)] text-white"
                       >
-                        Edit Preferences
+                        {preferences ? 'Edit Preferences' : 'Set Up Preferences'}
                       </Button>
                     </div>
-
                     {preferences ? (
                       <div className="space-y-6">
                         {/* Home Address */}

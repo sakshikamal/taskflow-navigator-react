@@ -46,6 +46,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .then((me: User) => {
         setUser(me);
         localStorage.setItem('calroute_user', JSON.stringify(me));
+        // After login, check for preferences and redirect accordingly
+        const hasPreferences = localStorage.getItem('calroute_preferences');
+        if (window.location.pathname === '/login' || window.location.pathname === '/') {
+          if (hasPreferences) {
+            navigate('/homepage', { replace: true });
+          } else {
+            navigate('/preferences', { replace: true });
+          }
+        }
       })
       .catch(() => {
         // no session or error, leave user = null

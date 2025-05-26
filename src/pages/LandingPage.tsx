@@ -256,7 +256,7 @@ export default function LandingPage() {
         <section id="features" className="w-full px-6 py-24">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-4xl font-bold mb-16 text-center text-gray-900">Product Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8 mb-8">
               <div className="bg-gray-50 p-8 rounded-xl text-center shadow-lg hover:shadow-xl transition-shadow">
                 <div className="w-16 h-16 bg-calroute-blue/10 rounded-xl flex items-center justify-center mx-auto mb-6">
                   <svg className="w-8 h-8 text-calroute-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,6 +284,39 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold mb-2 text-gray-900">Real-time Updates</h3>
                 <p className="text-gray-600">Live traffic and schedule synchronization</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8">
+              <div className="bg-gray-50 p-8 rounded-xl text-center shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-16 h-16 bg-calroute-blue/10 rounded-xl flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8 text-calroute-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 9a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0V9z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.07-6.07l-1.42 1.42M6.34 17.66l-1.42 1.42m12.02 0l-1.42-1.42M6.34 6.34L4.92 4.92" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-900">AI-Powered Task Understanding</h3>
+                <p className="text-gray-600">CalRoute uses AI to understand your tasks, even if you type them in your own words.</p>
+              </div>
+              <div className="bg-gray-50 p-8 rounded-xl text-center shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-16 h-16 bg-calroute-blue/10 rounded-xl flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8 text-calroute-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M16 2v4M8 2v4M3 10h18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Learns Your Routines</h3>
+                <p className="text-gray-600">The app gets smarter over time by learning your habits and preferences.</p>
+              </div>
+              <div className="bg-gray-50 p-8 rounded-xl text-center shadow-lg hover:shadow-xl transition-shadow">
+                <div className="w-16 h-16 bg-calroute-blue/10 rounded-xl flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8 text-calroute-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="7" cy="7" r="3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="17" cy="7" r="3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="17" r="3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Groups Nearby Tasks</h3>
+                <p className="text-gray-600">CalRoute puts together tasks that are close to each other, so you spend less time traveling.</p>
               </div>
             </div>
           </div>
@@ -362,22 +395,30 @@ export default function LandingPage() {
             {/* Team Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-24">
               <div className="text-center bg-calroute-blue/20 p-6 rounded-xl">
-                <div className="w-32 h-32 bg-calroute-blue/30 rounded-full mx-auto mb-4"></div>
+                <div className="w-32 h-32 bg-calroute-blue/30 rounded-full mx-auto mb-4 overflow-hidden flex items-center justify-center">
+                  <img src="/sakshi.jpeg" alt="Sakshi Kamal" className="w-full h-full object-cover rounded-full" />
+                </div>
                 <h3 className="text-xl font-bold text-gray-900">Sakshi Kamal</h3>
                 <p className="text-gray-600">Team Lead & Developer</p>
               </div>
               <div className="text-center bg-calroute-blue/10 p-6 rounded-xl">
-                <div className="w-32 h-32 bg-calroute-blue/20 rounded-full mx-auto mb-4"></div>
+                <div className="w-32 h-32 bg-calroute-blue/20 rounded-full mx-auto mb-4 overflow-hidden flex items-center justify-center">
+                  <img src="/avaneesh.JPG" alt="Avaneesh Anand Lal" className="w-full h-full object-cover rounded-full" />
+                </div>
                 <h3 className="text-xl font-bold text-gray-900">Avinash Anand Lal</h3>
                 <p className="text-gray-600">Developer</p>
               </div>
               <div className="text-center bg-calroute-blue/10 p-6 rounded-xl">
-                <div className="w-32 h-32 bg-calroute-blue/20 rounded-full mx-auto mb-4"></div>
+                <div className="w-32 h-32 bg-calroute-blue/20 rounded-full mx-auto mb-4 overflow-hidden flex items-center justify-center">
+                  <img src="/revathi.jpeg" alt="Revathi Bhat A" className="w-full h-full object-cover rounded-full" />
+                </div>
                 <h3 className="text-xl font-bold text-gray-900">Revathi Bhat A</h3>
                 <p className="text-gray-600">Developer</p>
               </div>
               <div className="text-center bg-calroute-blue/20 p-6 rounded-xl">
-                <div className="w-32 h-32 bg-calroute-blue/30 rounded-full mx-auto mb-4"></div>
+                <div className="w-32 h-32 bg-calroute-blue/30 rounded-full mx-auto mb-4 overflow-hidden flex items-center justify-center">
+                  <img src="/abhisek.jpeg" alt="Abhishek Hallad" className="w-full h-full object-cover rounded-full" />
+                </div>
                 <h3 className="text-xl font-bold text-gray-900">Abhishek Hallad</h3>
                 <p className="text-gray-600">Developer</p>
               </div>

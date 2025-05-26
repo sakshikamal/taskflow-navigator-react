@@ -1,6 +1,6 @@
 // src/components/Map.tsx
 import React, { useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer, InfoWindow } from '@react-google-maps/api';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyC_Dz0XtugoW2odkRb-QGaMT96bA0y9YJs';
 const libraries = ['places'] as const;
@@ -18,6 +18,7 @@ export default function Map({ routes }: MapProps) {
   });
 
   const [directions, setDirections] = React.useState<google.maps.DirectionsResult | null>(null);
+  const [hoveredMarker, setHoveredMarker] = React.useState<number | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     if (!isLoaded || !routes?.locations?.length) return;
