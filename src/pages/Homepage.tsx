@@ -59,19 +59,24 @@ export default function Homepage() {
         throw new Error('Failed to fetch tasks');
       }
       const data = await response.json();
-      const formattedTasks = data.tasks.map((task: any) => ({
-        id: task.id,
-        title: task.title,
-        timeRange: `${task.start_time} - ${task.end_time}`,
-        lat: task.lat,
-        lng: task.lng,
-        transitMode: task.transit_mode || 'car',
-        isCompleted: task.is_completed || false,
-        description: task.description || '',
-        locationName: task.location_name,
-        locationAddress: task.location_address,
-        priority: task.priority || 1
-      }));
+      console.log('Received tasks from backend:', data.tasks); // Debug log
+      const formattedTasks = data.tasks.map((task: any) => {
+        console.log('Processing task:', task); // Debug log
+        return {
+          id: task.id,
+          title: task.title,
+          timeRange: `${task.start_time} - ${task.end_time}`,
+          lat: task.lat,
+          lng: task.lng,
+          transitMode: task.transit_mode || 'car',
+          isCompleted: task.is_completed === true, // Explicitly check for true
+          description: task.description || '',
+          locationName: task.location_name,
+          locationAddress: task.location_address,
+          priority: task.priority || 1
+        };
+      });
+      console.log('Formatted tasks:', formattedTasks); // Debug log
       setTasks(formattedTasks);
       setTaskLocations(formattedTasks.map(task => ({
         lat: task.lat,
@@ -122,21 +127,34 @@ export default function Homepage() {
 
   const handleToggleComplete = async (taskId: string) => {
     try {
-      const response = await fetch(`http://localhost:8888/api/tasks/${taskId}/toggle`, {
+      const response = await fetch(`http://localhost:8888/api/complete_task/${taskId}`, {
         method: 'POST',
         credentials: 'include'
       });
       if (!response.ok) {
-        throw new Error('Failed to toggle task completion');
+        throw new Error('Failed to complete task');
       }
+      
+      // Update local state to reflect the completed status
       setTasks(currentTasks => currentTasks.map(task => 
-        task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
+        task.id === taskId ? { ...task, isCompleted: true } : task
       ));
+      
+      // Update selected task modal if it's the same task
       if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
-        setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null);
+        setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: true } : null);
       }
+
+      // Show success toast
+      toast({
+        title: "Success",
+        description: "Task marked as completed",
+      });
+
+      // Refresh tasks to get updated schedule
+      fetchTasks();
     } catch (error) {
-      console.error('Error toggling task completion:', error);
+      console.error('Error completing task:', error);
       toast({
         title: "Error",
         description: "Failed to update task status. Please try again.",
