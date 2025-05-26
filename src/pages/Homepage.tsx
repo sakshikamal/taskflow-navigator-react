@@ -301,9 +301,48 @@ export default function Homepage() {
         throw new Error('Task not found');
       }
 
-      // Convert start and end times to ISO format if they exist
-      const startTime = taskData.startTime ? new Date(`2000-01-01T${taskData.startTime}`).toISOString() : null;
-      const endTime = taskData.endTime ? new Date(`2000-01-01T${taskData.endTime}`).toISOString() : null;
+      // Get today's date in local timezone
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0]; // Get YYYY-MM-DD format
+
+      // Convert start and end times to ISO format while preserving local time
+      const createLocalDate = (timeStr: string) => {
+        if (!timeStr) return null;
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        
+        // Create date string in local timezone
+        const dateStr = `${todayStr}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+        
+        // Get the timezone offset in minutes
+        const tzOffset = new Date().getTimezoneOffset();
+        
+        // Create a new date and adjust for timezone
+        const date = new Date(dateStr);
+        date.setMinutes(date.getMinutes() - tzOffset);
+        
+        console.log('Time conversion details:', {
+          inputTime: timeStr,
+          dateStr,
+          tzOffset,
+          finalDate: date.toISOString(),
+          localTime: date.toLocaleTimeString()
+        });
+        
+        return date.toISOString();
+      };
+
+      const startTime = taskData.startTime ? createLocalDate(taskData.startTime) : null;
+      const endTime = taskData.endTime ? createLocalDate(taskData.endTime) : null;
+
+      console.log('Time conversion:', {
+        inputStartTime: taskData.startTime,
+        inputEndTime: taskData.endTime,
+        convertedStartTime: startTime,
+        convertedEndTime: endTime,
+        localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        todayStr,
+        explanation: 'Preserving local time while converting to ISO string'
+      });
 
       const response = await fetch(`http://localhost:8888/api/tasks/${taskToUpdate.raw_task_id}`, {
         method: 'PUT',
