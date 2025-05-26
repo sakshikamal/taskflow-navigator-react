@@ -20,6 +20,7 @@ interface NewTaskModalProps {
   onSubmit: (taskData: TaskData, taskId?: string) => void;
   initialData?: TaskData;
   taskId?: string;
+  error?: string | null;
 }
 
 interface TaskData {
@@ -34,7 +35,7 @@ interface TaskData {
   priority: number;
 }
 
-export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, taskId }: NewTaskModalProps) {
+export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, taskId, error }: NewTaskModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<TaskData>({
     title: '',
@@ -151,22 +152,8 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, t
     e.preventDefault();
     if (validateForm()) {
       onSubmit(formData, taskId);
-      setFormData({
-        title: '',
-        duration: '',
-        location: '',
-        lat: undefined,
-        lng: undefined,
-        startTime: '',
-        endTime: '',
-        description: '',
-        priority: 2,
-      });
-      onClose();
-      toast({
-        title: taskId ? "Task Updated" : "Task Created",
-        description: taskId ? "Your task has been updated successfully." : "Your new task has been added successfully.",
-      });
+      // Do NOT call onClose() here; parent will close modal on success
+      // setFormData({ ... }); // Optionally reset form here if needed
     }
   };
 
@@ -187,6 +174,12 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, t
             {taskId ? 'Edit Task' : 'Add New Task'}
           </DialogTitle>
         </DialogHeader>
+        
+        {error && (
+          <div className="text-red-600 mb-2 text-sm font-medium">
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Title Field */}

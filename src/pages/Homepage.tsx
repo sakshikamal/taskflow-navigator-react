@@ -42,6 +42,7 @@ export default function Homepage() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [bounceTick, setBounceTick] = useState(0);
+  const [newTaskError, setNewTaskError] = useState<string | null>(null);
 
   if (loading) return <div>Loading...</div>;
 
@@ -134,35 +135,41 @@ export default function Homepage() {
   };
 
   const handleToggleComplete = async (taskId: string) => {
+    // Optimistically toggle UI
+    setTasks(prev => prev.map(task =>
+      task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
+    ));
+    setTaskLocations(prev => prev.filter(loc => loc.title !== tasks.find(t => t.id === taskId)?.title));
+    if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
+      setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null);
+    }
+    // Call backend toggle API in background
     try {
-      const response = await fetch(`http://localhost:8888/api/complete_task/${taskId}`, {
+      const response = await fetch(`http://localhost:8888/api/tasks/${taskId}/toggle`, {
         method: 'POST',
         credentials: 'include'
       });
       if (!response.ok) {
-        throw new Error('Failed to complete task');
+        throw new Error('Failed to toggle task status');
       }
-      
-      // Update local state to reflect the completed status
-      setTasks(currentTasks => currentTasks.map(task => 
-        task.id === taskId ? { ...task, isCompleted: true } : task
-      ));
-      
-      // Update selected task modal if it's the same task
-      if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
-        setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: true } : null);
-      }
-
-      // Show success toast
-      toast({
-        title: "Success",
-        description: "Task marked as completed",
-      });
-
-      // Refresh tasks to get updated schedule
-      fetchTasks();
+      // Optionally, you can refresh tasks here if you want to sync with backend
+      // fetchTasks();
     } catch (error) {
-      console.error('Error completing task:', error);
+      // Revert optimistic update if API fails
+      setTasks(prev => prev.map(task =>
+        task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
+      ));
+      setTaskLocations(prev => {
+        const toggledTask = tasks.find(t => t.id === taskId);
+        if (toggledTask && !toggledTask.isCompleted) {
+          // If reverting to not completed, add back to route
+          return [...prev, { lat: toggledTask.lat, lng: toggledTask.lng, title: toggledTask.title }];
+        }
+        return prev;
+      });
+      if (selectedTaskForModal && selectedTaskForModal.id === taskId) {
+        setSelectedTaskForModal(prev => prev ? { ...prev, isCompleted: !prev.isCompleted } : null);
+      }
       toast({
         title: "Error",
         description: "Failed to update task status. Please try again.",
@@ -176,23 +183,29 @@ export default function Homepage() {
   };
 
   const handleNewTaskSubmit = async (taskData: any) => {
+    setIsNewTaskModalOpen(false); // Close modal immediately after clicking Add Task
     try {
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      let startTime = null;
-      let endTime = null;
-      if (taskData.startTime && taskData.endTime) {
-        const [startHours, startMinutes] = taskData.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = taskData.endTime.split(':').map(Number);
-        startTime = new Date(today);
-        startTime.setHours(startHours, startMinutes, 0);
-        endTime = new Date(today);
-        endTime.setHours(endHours, endMinutes, 0);
-        if (endTime <= startTime) {
-          endTime = new Date(tomorrow);
-          endTime.setHours(endHours, endMinutes, 0);
-        }
+      setNewTaskError(null); // Clear previous errors
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      // Validate and parse times
+      if (!taskData.startTime || !taskData.endTime) {
+        throw new Error("Start time and end time are required");
+      }
+      const [startHours, startMinutes] = taskData.startTime.split(':').map(Number);
+      const [endHours, endMinutes] = taskData.endTime.split(':').map(Number);
+      const startTime = new Date(today);
+      startTime.setHours(startHours, startMinutes, 0);
+      const endTime = new Date(today);
+      endTime.setHours(endHours, endMinutes, 0);
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const startMinutesTotal = startHours * 60 + startMinutes;
+      const endMinutesTotal = endHours * 60 + endMinutes;
+      if (startMinutesTotal <= currentMinutes) {
+        throw new Error("Start time must be after current time");
+      }
+      if (endMinutesTotal <= startMinutesTotal) {
+        throw new Error("End time must be after start time");
       }
       const response = await fetch('http://localhost:8888/api/tasks', {
         method: 'POST',
@@ -207,8 +220,8 @@ export default function Homepage() {
           location_address: taskData.location,
           lat: taskData.lat,
           lng: taskData.lng,
-          start_time: startTime?.toISOString(),
-          end_time: endTime?.toISOString(),
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString(),
           duration: parseInt(taskData.duration, 10),
           priority: taskData.priority,
           transit_mode: taskData.transitMode || 'car'
@@ -241,11 +254,15 @@ export default function Homepage() {
         title: "Success",
         description: "Task created successfully!",
       });
+      setNewTaskError(null); // Clear error on success
+      // Add page reload after successful task creation
+      window.location.reload();
     } catch (error) {
-      console.error('Error creating task:', error);
+      const errorMsg = error instanceof Error ? error.message : "Failed to create task. Please try again.";
+      setNewTaskError(errorMsg);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create task. Please try again.",
+        description: errorMsg,
         variant: "destructive"
       });
     }

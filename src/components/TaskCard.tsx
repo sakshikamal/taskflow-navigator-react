@@ -45,7 +45,8 @@ export default function TaskCard({ task, onClick, onToggleComplete, isActive, is
         <button
           onClick={handleCheckboxClick}
           className="focus:outline-none transition-transform duration-200 hover:scale-110"
-          aria-label={task.isCompleted ? "Mark task as incomplete" : "Mark task as complete"}
+          aria-label={task.isCompleted ? "Task completed" : "Mark task as complete"}
+          disabled={task.isCompleted}
         >
           {task.isCompleted ? 
             <CheckSquare size={24} className="text-[rgb(0,74,173)]" /> : 
