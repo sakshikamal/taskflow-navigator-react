@@ -51,12 +51,21 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, t
 
   const [errors, setErrors] = useState<Partial<Record<keyof TaskData, string>>>({});
   const locationAutoRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const hasInitialized = useRef(false);
 
-  // Populate form with initialData if editing
+  // Populate form with initialData only when modal first opens
   useEffect(() => {
-    if (initialData) {
+    if (isOpen && !hasInitialized.current && initialData) {
       setFormData(initialData);
-    } else {
+      hasInitialized.current = true;
+    } else if (!isOpen) {
+      hasInitialized.current = false;
+    }
+  }, [isOpen, initialData]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
       setFormData({
         title: '',
         duration: '',
@@ -68,8 +77,9 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, t
         description: '',
         priority: 2,
       });
+      setErrors({});
     }
-  }, [initialData, isOpen]);
+  }, [isOpen]);
 
   const onLoadLocation = (autocomplete: google.maps.places.Autocomplete) => {
     locationAutoRef.current = autocomplete;

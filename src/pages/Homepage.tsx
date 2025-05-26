@@ -14,6 +14,7 @@ import PendingTasksModal from '@/components/PendingTasksModal';
 
 export interface Task {
   id: string;
+  raw_task_id: string;
   title: string;
   timeRange: string;
   lat: number;
@@ -62,28 +63,32 @@ export default function Homepage() {
       }
       const data = await response.json();
       console.log('Received tasks from backend:', data.tasks); // Debug log
-      const formattedTasks = data.tasks.map((task: any) => {
+      const formattedTasks = data.tasks.map((task: any, index: number) => {
         console.log('Processing task:', task); // Debug log
         return {
           id: task.id,
+          raw_task_id: task.raw_task_id,
           title: task.title,
           timeRange: `${task.start_time} - ${task.end_time}`,
           lat: task.lat,
           lng: task.lng,
           transitMode: task.transit_mode || 'car',
-          isCompleted: task.is_completed === true, // Explicitly check for true
+          isCompleted: task.is_completed === true,
           description: task.description || '',
           locationName: task.location_name,
           locationAddress: task.location_address,
-          priority: task.priority || 1
+          priority: task.priority || 1,
+          index: index // Add index to help with ordering
         };
       });
       console.log('Formatted tasks:', formattedTasks); // Debug log
       setTasks(formattedTasks);
-      setTaskLocations(formattedTasks.map(task => ({
+      
+      // Update task locations with proper ordering
+      setTaskLocations(formattedTasks.map((task, index) => ({
         lat: task.lat,
         lng: task.lng,
-        title: task.title
+        title: `${String.fromCharCode(65 + index)}. ${task.title}` // Add letter prefix to title
       })));
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -232,8 +237,11 @@ export default function Homepage() {
         throw new Error(errorData.error || 'Failed to create task');
       }
       const newTask = await response.json();
+      
+      // Update tasks list with the new task
       setTasks(prevTasks => [...prevTasks, {
         id: newTask.id,
+        raw_task_id: newTask.raw_task_id,
         title: newTask.title,
         timeRange: `${newTask.start_time} - ${newTask.end_time}`,
         lat: newTask.lat,
@@ -245,18 +253,24 @@ export default function Homepage() {
         locationAddress: newTask.location_address,
         priority: newTask.priority || 1
       }]);
-      setTaskLocations(prevLocations => [...prevLocations, {
-        lat: newTask.lat,
-        lng: newTask.lng,
-        title: newTask.title
-      }]);
+
+      // Update task locations for the map
+      if (newTask.lat && newTask.lng) {
+        setTaskLocations(prevLocations => [...prevLocations, {
+          lat: newTask.lat,
+          lng: newTask.lng,
+          title: newTask.title
+        }]);
+      }
+
       toast({
         title: "Success",
         description: "Task created successfully!",
       });
       setNewTaskError(null); // Clear error on success
-      // Add page reload after successful task creation
-      window.location.reload();
+      
+      // Remove the page reload
+      // window.location.reload();
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to create task. Please try again.";
       setNewTaskError(errorMsg);
@@ -281,7 +295,17 @@ export default function Homepage() {
   const handleEditTaskSubmit = async (taskData: any, taskId?: string) => {
     if (!taskId) return;
     try {
-      const response = await fetch(`http://localhost:8888/api/tasks/${taskId}`, {
+      // Find the task to get its raw_task_id
+      const taskToUpdate = tasks.find(t => t.id === taskId);
+      if (!taskToUpdate) {
+        throw new Error('Task not found');
+      }
+
+      // Convert start and end times to ISO format if they exist
+      const startTime = taskData.startTime ? new Date(`2000-01-01T${taskData.startTime}`).toISOString() : null;
+      const endTime = taskData.endTime ? new Date(`2000-01-01T${taskData.endTime}`).toISOString() : null;
+
+      const response = await fetch(`http://localhost:8888/api/tasks/${taskToUpdate.raw_task_id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -292,12 +316,30 @@ export default function Homepage() {
           lat: taskData.lat,
           lng: taskData.lng,
           priority: taskData.priority,
+          start_time: startTime,
+          end_time: endTime,
+          duration: parseInt(taskData.duration) || 45, // Convert duration to integer, default to 45 if invalid
         }),
       });
-      if (!response.ok) throw new Error('Failed to update task');
-      fetchTasks();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update task');
+      }
+
+      // Wait for tasks to refresh before closing modal
+      await fetchTasks();
+      
+      toast({
+        title: "Success",
+        description: "Task updated successfully!",
+      });
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to update task.', variant: 'destructive' });
+      const errorMsg = error instanceof Error ? error.message : "Failed to update task. Please try again.";
+      toast({ 
+        title: 'Error', 
+        description: errorMsg, 
+        variant: 'destructive' 
+      });
     } finally {
       setIsEditModalOpen(false);
       setEditTask(null);
@@ -313,9 +355,48 @@ export default function Homepage() {
       if (!response.ok) {
         throw new Error('Failed to delete task');
       }
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskIdToDelete));
-      toast({ title: "Task Deleted", description: `Task has been removed.` });
-      if (selectedTaskForModal && selectedTaskForModal.id === taskIdToDelete) {
+
+      // Fetch fresh tasks from the backend to ensure we have the latest data
+      const tasksResponse = await fetch('http://localhost:8888/api/tasks', {
+        credentials: 'include'
+      });
+      if (!tasksResponse.ok) {
+        throw new Error('Failed to fetch updated tasks');
+      }
+      const data = await tasksResponse.json();
+      
+      // Update tasks list with fresh data
+      const formattedTasks = data.tasks.map((task: any, index: number) => ({
+        id: task.id,
+        raw_task_id: task.raw_task_id,
+        title: task.title,
+        timeRange: `${task.start_time} - ${task.end_time}`,
+        lat: task.lat,
+        lng: task.lng,
+        transitMode: task.transit_mode || 'car',
+        isCompleted: task.is_completed === true,
+        description: task.description || '',
+        locationName: task.location_name,
+        locationAddress: task.location_address,
+        priority: task.priority || 1,
+        index: index
+      }));
+      
+      // Update both tasks and task locations in a single state update
+      setTasks(formattedTasks);
+      setTaskLocations(formattedTasks.map((task, index) => ({
+        lat: task.lat,
+        lng: task.lng,
+        title: `${String.fromCharCode(65 + index)}. ${task.title}`
+      })));
+
+      toast({ 
+        title: "Success", 
+        description: "Task has been deleted successfully." 
+      });
+
+      // Close modal if the deleted task was being viewed
+      if (selectedTaskForModal && selectedTaskForModal.raw_task_id === taskIdToDelete) {
         handleCloseModal();
       }
     } catch (error) {

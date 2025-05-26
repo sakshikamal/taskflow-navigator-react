@@ -89,9 +89,8 @@ export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelet
   };
 
   const handleDelete = () => {
-    // console.log("Delete task:", task.id);
-    onDelete(task.id);
-    // Implement actual delete logic
+    // console.log("Delete task:", task.raw_task_id);
+    onDelete(task.raw_task_id);
     onClose(); // Close modal after delete
   };
 
