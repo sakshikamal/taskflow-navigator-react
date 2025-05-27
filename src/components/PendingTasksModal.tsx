@@ -103,7 +103,7 @@ export default function PendingTasksModal({ open, onClose, onTasksCompleted }: P
           </div>
         )}
         <DialogFooter className="gap-2 mt-4">
-          <Button variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>Close</Button>
           <Button onClick={handleMarkCompleted} disabled={selected.size === 0 || submitting} className="bg-[rgb(0,74,173)] text-white">
             Mark as Completed
           </Button>
