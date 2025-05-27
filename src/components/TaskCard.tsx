@@ -15,8 +15,9 @@ interface TaskCardProps {
 export const transitIcons: { [key: string]: JSX.Element } = {
   car: <Car size={18} className="mr-2 text-gray-600" />,
   bike: <Bike size={18} className="mr-2 text-gray-600" />,
-  bus: <Bus size={18} className="mr-2 text-gray-600" />,
-  walk: <Footprints size={18} className="mr-2 text-gray-600" />,
+  bus_train: <Bus size={18} className="mr-2 text-gray-600" />,
+  walking: <Footprints size={18} className="mr-2 text-gray-600" />,
+  rideshare: <Car size={18} className="mr-2 text-gray-600" />
 };
 
 export default function TaskCard({ task, onClick, onToggleComplete, isActive, isCurrent, index }: TaskCardProps) {
@@ -72,7 +73,10 @@ export default function TaskCard({ task, onClick, onToggleComplete, isActive, is
               "text-gray-600",
               task.isCompleted && "line-through"
             )}>
-              {task.transitMode.charAt(0).toUpperCase() + task.transitMode.slice(1)}
+              {task.transitMode === 'walking' ? 'Walk' :
+                task.transitMode === 'bus_train' ? 'Bus/Train' :
+                task.transitMode === 'rideshare' ? 'Cab' :
+                task.transitMode.charAt(0).toUpperCase() + task.transitMode.slice(1)}
             </span>
           </div>
         </div>

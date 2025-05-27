@@ -20,7 +20,7 @@ export interface Task {
   lat: number;
   lng: number;
   isActive?: boolean;
-  transitMode: 'car' | 'bike' | 'bus' | 'walk';
+  transitMode: 'car' | 'bike' | 'bus_train' | 'walking' | 'rideshare';
   isCompleted: boolean;
   description: string;
   locationName?: string;
