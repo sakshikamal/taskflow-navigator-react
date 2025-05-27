@@ -1,4 +1,4 @@
-import { CheckSquare, Square, Car, Bike, Bus, Footprints, Edit3, Trash2, MoreVertical } from 'lucide-react';
+import { CheckSquare, Square, Car, Bike, Bus, Footprints, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Task } from '@/pages/Homepage';
 
@@ -18,6 +18,17 @@ export const transitIcons: { [key: string]: JSX.Element } = {
   bus_train: <Bus size={18} className="mr-2 text-gray-600" />,
   walking: <Footprints size={18} className="mr-2 text-gray-600" />,
   rideshare: <Car size={18} className="mr-2 text-gray-600" />
+};
+
+export const getTransitModeText = (mode: string) => {
+  switch (mode) {
+    case 'car': return 'Car';
+    case 'bike': return 'Bike';
+    case 'bus_train': return 'Bus/Train';
+    case 'walking': return 'Walk';
+    case 'rideshare': return 'Cab';
+    default: return mode ? mode.charAt(0).toUpperCase() + mode.slice(1) : '';
+  }
 };
 
 export default function TaskCard({ task, onClick, onToggleComplete, isActive, isCurrent, index }: TaskCardProps) {
@@ -80,6 +91,9 @@ export default function TaskCard({ task, onClick, onToggleComplete, isActive, is
             </span>
           </div>
         </div>
+      </div>
+      <div className="absolute top-2 right-2">
+        <Info size={22} className="text-[rgb(0,74,173)]" />
       </div>
     </div>
   );

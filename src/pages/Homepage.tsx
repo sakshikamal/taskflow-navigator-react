@@ -697,13 +697,6 @@ export default function Homepage() {
                             isCurrent={isCurrent}
                             index={index}
                           />
-                          <button
-                            className="absolute top-2 right-2 p-1 rounded hover:bg-gray-200"
-                            onClick={(e) => { e.stopPropagation(); handleEditTask(task); }}
-                            title="Edit Task"
-                          >
-                            <Pencil size={18} />
-                          </button>
                         </div>
                       );
                     })}

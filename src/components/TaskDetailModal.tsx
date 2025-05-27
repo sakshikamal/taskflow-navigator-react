@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Task } from "@/pages/Homepage"; // Assuming Task interface is exported from Homepage
-import { transitIcons } from "./TaskCard"; // Assuming transitIcons is exported or can be redefined here
+import { transitIcons, getTransitModeText } from "./TaskCard"; // Assuming transitIcons is exported or can be redefined here
 import { Badge } from "@/components/ui/badge";
 import { MapPin, CalendarDays, Edit3, Trash2, Info } from "lucide-react";
 import Map from './Map';
@@ -126,7 +126,7 @@ export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelet
               )}
               <div className="flex items-center">
                 {transitIcons[task.transitMode]}
-                <span className="text-gray-700">{task.transitMode.charAt(0).toUpperCase() + task.transitMode.slice(1)}</span>
+                <span className="text-gray-700">{getTransitModeText(task.transitMode)}</span>
               </div>
               {task.locationName && (
                 <div className="flex items-start">
