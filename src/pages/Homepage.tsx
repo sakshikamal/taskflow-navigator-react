@@ -194,27 +194,50 @@ export default function Homepage() {
     setIsNewTaskModalOpen(false); // Close modal immediately after clicking Add Task
     try {
       setNewTaskError(null); // Clear previous errors
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
       // Validate and parse times
       if (!taskData.startTime || !taskData.endTime) {
         throw new Error("Start time and end time are required");
       }
-      const [startHours, startMinutes] = taskData.startTime.split(':').map(Number);
-      const [endHours, endMinutes] = taskData.endTime.split(':').map(Number);
-      const startTime = new Date(today);
-      startTime.setHours(startHours, startMinutes, 0);
-      const endTime = new Date(today);
-      endTime.setHours(endHours, endMinutes, 0);
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      // Parse the 12-hour time format (e.g., "05:00 PM")
+      const parseTime = (timeStr: string) => {
+        const [time, modifier] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        if (modifier === 'PM' && hours !== 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+        return { hours, minutes };
+      };
+
+      const { hours: startHours, minutes: startMinutes } = parseTime(taskData.startTime);
+      const { hours: endHours, minutes: endMinutes } = parseTime(taskData.endTime);
+
+      // Create dates in Pacific time
+      const pacific = 'America/Los_Angeles';
+      const now = new Date();
+      const today = new Date(now.toLocaleString('en-US', { timeZone: pacific }));
+      today.setHours(0, 0, 0, 0);
+
+      const startTime = new Date(today.toLocaleString('en-US', { timeZone: pacific }));
+      startTime.setHours(startHours, startMinutes, 0, 0);
+
+      const endTime = new Date(today.toLocaleString('en-US', { timeZone: pacific }));
+      endTime.setHours(endHours, endMinutes, 0, 0);
+
+      // Get current time in Pacific
+      const nowPacific = new Date(now.toLocaleString('en-US', { timeZone: pacific }));
+      const currentMinutes = nowPacific.getHours() * 60 + nowPacific.getMinutes();
       const startMinutesTotal = startHours * 60 + startMinutes;
       const endMinutesTotal = endHours * 60 + endMinutes;
+
+      // Validate times
       if (startMinutesTotal <= currentMinutes) {
-        throw new Error("Start time must be after current time");
+        throw new Error("Start time must be after current Pacific time");
       }
       if (endMinutesTotal <= startMinutesTotal) {
         throw new Error("End time must be after start time");
       }
+
       const response = await fetch('http://localhost:8888/api/tasks', {
         method: 'POST',
         credentials: 'include',
@@ -337,48 +360,46 @@ export default function Homepage() {
         throw new Error('Task not found');
       }
 
-      // Get today's date in local timezone
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0]; // Get YYYY-MM-DD format
-
-      // Convert start and end times to ISO format while preserving local time
-      const createLocalDate = (timeStr: string) => {
+      // Parse the 12-hour time format (e.g., "05:00 PM")
+      const parseTime = (timeStr: string) => {
         if (!timeStr) return null;
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        
-        // Create date string in local timezone
-        const dateStr = `${todayStr}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
-        
-        // Get the timezone offset in minutes
-        const tzOffset = new Date().getTimezoneOffset();
-        
-        // Create a new date and adjust for timezone
-        const date = new Date(dateStr);
-        date.setMinutes(date.getMinutes() - tzOffset);
-        
-        console.log('Time conversion details:', {
-          inputTime: timeStr,
-          dateStr,
-          tzOffset,
-          finalDate: date.toISOString(),
-          localTime: date.toLocaleTimeString()
-        });
-        
-        return date.toISOString();
+        const [time, modifier] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        if (modifier === 'PM' && hours !== 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+        return { hours, minutes };
       };
 
-      const startTime = taskData.startTime ? createLocalDate(taskData.startTime) : null;
-      const endTime = taskData.endTime ? createLocalDate(taskData.endTime) : null;
+      // Create dates in Pacific time
+      const pacific = 'America/Los_Angeles';
+      const now = new Date();
+      const today = new Date(now.toLocaleString('en-US', { timeZone: pacific }));
+      today.setHours(0, 0, 0, 0);
 
-      console.log('Time conversion:', {
-        inputStartTime: taskData.startTime,
-        inputEndTime: taskData.endTime,
-        convertedStartTime: startTime,
-        convertedEndTime: endTime,
-        localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        todayStr,
-        explanation: 'Preserving local time while converting to ISO string'
-      });
+      let startTime = null;
+      let endTime = null;
+
+      if (taskData.startTime) {
+        const { hours: startHours, minutes: startMinutes } = parseTime(taskData.startTime);
+        startTime = new Date(today.toLocaleString('en-US', { timeZone: pacific }));
+        startTime.setHours(startHours, startMinutes, 0, 0);
+      }
+
+      if (taskData.endTime) {
+        const { hours: endHours, minutes: endMinutes } = parseTime(taskData.endTime);
+        endTime = new Date(today.toLocaleString('en-US', { timeZone: pacific }));
+        endTime.setHours(endHours, endMinutes, 0, 0);
+      }
+
+      // Validate times if both are provided
+      if (startTime && endTime) {
+        const startMinutesTotal = startTime.getHours() * 60 + startTime.getMinutes();
+        const endMinutesTotal = endTime.getHours() * 60 + endTime.getMinutes();
+        
+        if (endMinutesTotal <= startMinutesTotal) {
+          throw new Error("End time must be after start time");
+        }
+      }
 
       const response = await fetch(`http://localhost:8888/api/tasks/${taskToUpdate.raw_task_id}`, {
         method: 'PUT',
@@ -391,8 +412,8 @@ export default function Homepage() {
           lat: taskData.lat,
           lng: taskData.lng,
           priority: taskData.priority,
-          start_time: startTime,
-          end_time: endTime,
+          start_time: startTime?.toISOString(),
+          end_time: endTime?.toISOString(),
           duration: parseInt(taskData.duration) || 45, // Convert duration to integer, default to 45 if invalid
         }),
       });
