@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Clock, Info, Star } from 'lucide-react';
 import { Autocomplete } from '@react-google-maps/api';
+import { TimeWheelPicker } from "./ui/time-wheel-picker";
 
 interface NewTaskModalProps {
   isOpen: boolean;
@@ -257,36 +258,32 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, t
           </div>
 
           {/* Optional Time Range Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startTime" className="text-base font-semibold text-gray-700">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">
                 Start Time
-              </Label>
-              <Input
-                type="time"
-                id="startTime"
-                name="startTime"
+              </label>
+              <TimeWheelPicker
                 value={formData.startTime}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[rgb(93,224,230)] focus:border-[rgb(93,224,230)]"
+                onChange={(value) => setFormData({ ...formData, startTime: value })}
+                error={!!errors.startTime}
               />
+              {errors.startTime && (
+                <p className="mt-1 text-sm text-red-500">{errors.startTime}</p>
+              )}
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="endTime" className="text-base font-semibold text-gray-700">
+            <div>
+              <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">
                 End Time
-              </Label>
-              <Input
-                type="time"
-                id="endTime"
-                name="endTime"
+              </label>
+              <TimeWheelPicker
                 value={formData.endTime}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 rounded-lg border ${
-                  errors.endTime ? 'border-red-500' : 'border-gray-200'
-                } focus:ring-2 focus:ring-[rgb(93,224,230)] focus:border-[rgb(93,224,230)]`}
+                onChange={(value) => setFormData({ ...formData, endTime: value })}
+                error={!!errors.endTime}
               />
-              {errors.endTime && <p className="text-sm text-red-500">{errors.endTime}</p>}
+              {errors.endTime && (
+                <p className="mt-1 text-sm text-red-500">{errors.endTime}</p>
+              )}
             </div>
           </div>
 

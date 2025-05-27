@@ -34,6 +34,7 @@ export default function Homepage() {
   const [isLoading, setIsLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskLocations, setTaskLocations] = useState<{ lat: number; lng: number; title: string }[]>([]);
+  const [totalTravelTime, setTotalTravelTime] = useState<number | null>(null);
 
   const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -62,7 +63,8 @@ export default function Homepage() {
         throw new Error('Failed to fetch tasks');
       }
       const data = await response.json();
-      console.log('Received tasks from backend:', data.tasks); // Debug log
+      console.log('Received data from backend:', data); // Debug log for entire response
+      console.log('Total travel time from backend:', data.total_travel_time); // Debug log for total travel time
       const formattedTasks = data.tasks.map((task: any, index: number) => {
         console.log('Processing task:', task); // Debug log
         return {
@@ -83,6 +85,7 @@ export default function Homepage() {
       });
       console.log('Formatted tasks:', formattedTasks); // Debug log
       setTasks(formattedTasks);
+      setTotalTravelTime(data.total_travel_time);
       
       // Update task locations with proper ordering
       setTaskLocations(formattedTasks.map((task, index) => ({
@@ -282,8 +285,41 @@ export default function Homepage() {
     }
   };
 
-  const handleSyncCalendar = () => {
-    toast({ title: "Sync Calendar/Todoist", description: "This feature is coming soon!" });
+  const handleSyncCalendar = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('http://localhost:8888/api/sync', {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to sync tasks');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Success",
+          description: "Successfully synced and optimized your schedule!",
+        });
+        // Refresh the tasks after sync
+        await fetchTasks();
+      } else {
+        throw new Error(data.error || 'Sync failed');
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to sync tasks. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const handleEditTask = (taskToEdit: Task) => {
@@ -599,7 +635,14 @@ export default function Homepage() {
           </header>
           
           <div className="mb-6 p-4 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
-            <p className="text-gray-700">Your schedule has been optimized for maximum efficiency. Total travel time: 45 minutes.</p>
+            <p className="text-gray-700">
+              Your schedule has been optimized for maximum efficiency.
+              {totalTravelTime !== null ? (
+                ` Total travel time: ${totalTravelTime} minutes.`
+              ) : (
+                " Calculating total travel time..."
+              )}
+            </p>
           </div> 
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
