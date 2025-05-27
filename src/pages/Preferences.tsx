@@ -117,12 +117,8 @@ export default function Preferences() {
       work_start_time,
       work_end_time,
       home_address: homeAddress,
-      // CORRECTED: Key is `transit_modes` and it sends the whole array
       transit_modes: transportModes, 
-      // ADDED: Send the gym address
       gym_address: gymAddress,
-      // CORRECTED: Key is `favorite_stores` and it sends the array of store addresses
-      // We filter out any empty strings before sending.
       favorite_stores: groceryStores.filter(store => store.trim() !== ''),
     };
 
@@ -137,6 +133,10 @@ export default function Preferences() {
       if (!resp.ok) {
         throw new Error(result.error || 'An unknown error occurred.');
       }
+
+      // Store only home address in localStorage
+      localStorage.setItem('calroute_home_address', homeAddress);
+
       toast({ title: 'Preferences Saved!', description: 'Your personalized schedule awaits.' });
       navigate('/homepage');
     } catch (err: any) {

@@ -23,23 +23,31 @@ interface TaskDetailModalProps {
   onEdit: (task: Task) => void;
   onDelete: (taskId: string) => void;
   tasks: Task[];
-  homeAddress: string;
 }
 
-export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelete, tasks, homeAddress }: TaskDetailModalProps) {
+export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelete, tasks }: TaskDetailModalProps) {
   const [homeLatLng, setHomeLatLng] = React.useState<{ lat: number; lng: number } | null>(null);
+  const [geocodingStatus, setGeocodingStatus] = React.useState<string>('');
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: 'AIzaSyC_Dz0XtugoW2odkRb-QGaMT96bA0y9YJs',
     libraries: ['places'],
   });
+
+  // Get home address from localStorage
+  const homeAddress = localStorage.getItem('calroute_home_address') || '';
 
   React.useEffect(() => {
     if (!isLoaded || !homeAddress) return;
     // Only geocode if first task
     const idx = tasks.findIndex(t => t.id === task?.id);
     if (idx === 0 && homeAddress) {
+      if (!window.google || !window.google.maps || !window.google.maps.Geocoder) {
+        setGeocodingStatus('Error: Google Maps Geocoder not available');
+        return;
+      }
       const geocoder = new window.google.maps.Geocoder();
       geocoder.geocode({ address: homeAddress }, (results, status) => {
+        setGeocodingStatus(`Geocoding status: ${status}`);
         if (status === 'OK' && results && results[0]) {
           setHomeLatLng({
             lat: results[0].geometry.location.lat(),
@@ -54,16 +62,19 @@ export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelet
 
   // Find previous task (by order in tasks array)
   const idx = tasks.findIndex(t => t.id === task.id);
-  let origin = homeAddress;
+  let origin = '';
   let originLat = null, originLng = null;
-  if (idx > 0) {
+  if (idx === 0) {
+    origin = homeAddress;
+    if (homeLatLng) {
+      originLat = homeLatLng.lat;
+      originLng = homeLatLng.lng;
+    }
+  } else if (idx > 0) {
     const prev = tasks[idx - 1];
     origin = prev.locationAddress || prev.locationName || homeAddress;
     originLat = prev.lat;
     originLng = prev.lng;
-  } else if (idx === 0 && homeLatLng) {
-    originLat = homeLatLng.lat;
-    originLng = homeLatLng.lng;
   }
   const destination = task.locationAddress || task.locationName || '';
   const destLat = task.lat;
@@ -154,7 +165,16 @@ export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelet
         <div className="md:w-1/2 w-full mt-6 md:mt-0 md:ml-6 flex flex-col items-center">
           <a href={clickUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-56 md:h-full rounded-lg overflow-hidden shadow-lg border border-gray-200 hover:ring-2 hover:ring-blue-400 transition-all">
             <div className="w-full h-56 md:h-72">
-              <Map routes={{ locations: mapLocations }} />
+              {(originLat && originLng && destLat && destLng) ? (
+                <Map routes={{ locations: mapLocations }} />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <div className="text-center">
+                    <p>Loading map...</p>
+                    {geocodingStatus && <p className="text-sm mt-2">{geocodingStatus}</p>}
+                  </div>
+                </div>
+              )}
             </div>
           </a>
           <span className="text-xs text-gray-500 mt-2">Click map to open in Google Maps</span>
