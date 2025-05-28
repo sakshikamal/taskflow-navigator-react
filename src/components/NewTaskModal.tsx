@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "@/hooks/useLocation";
 import { MapPin, Clock, Info, Star } from 'lucide-react';
 import { Autocomplete } from '@react-google-maps/api';
 import { TimeWheelPicker } from "./ui/time-wheel-picker";
@@ -35,10 +36,25 @@ interface TaskData {
   endTime?: string;
   description?: string;
   priority: number;
+  user_lat?: number;
+  user_lng?: number;
 }
 
 export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, taskId, error }: NewTaskModalProps) {
   const { toast } = useToast();
+  const { location: userLocation, isLoading: isLocationLoading, error: locationError } = useLocation();
+
+  // Update form data with user location when it's available
+  useEffect(() => {
+    if (userLocation && !formData.lat && !formData.lng) {
+      setFormData(prev => ({
+        ...prev,
+        lat: userLocation.lat,
+        lng: userLocation.lng
+      }));
+    }
+  }, [userLocation]);
+
   const [formData, setFormData] = useState<TaskData>({
     title: '',
     duration: '',
@@ -166,7 +182,13 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, t
     setIsSubmitting(true);
     try {
       if (validateForm()) {
-        await onSubmit(formData, taskId);
+        // Add user location if available
+        const taskDataWithLocation = {
+          ...formData,
+          user_lat: userLocation?.lat,
+          user_lng: userLocation?.lng
+        };
+        await onSubmit(taskDataWithLocation, taskId);
         onClose();
       }
     } catch (error) {

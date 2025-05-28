@@ -252,6 +252,8 @@ export default function Homepage() {
           location_address: taskData.location,
           lat: taskData.lat,
           lng: taskData.lng,
+          user_lat: taskData.user_lat,
+          user_lng: taskData.user_lng,
           start_time: startTime.toISOString(),
           end_time: endTime.toISOString(),
           duration: parseInt(taskData.duration, 10),
