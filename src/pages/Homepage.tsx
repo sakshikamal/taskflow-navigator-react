@@ -45,6 +45,7 @@ export default function Homepage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [bounceTick, setBounceTick] = useState(0);
   const [newTaskError, setNewTaskError] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   if (loading) return <div>Loading...</div>;
 
@@ -296,7 +297,7 @@ export default function Homepage() {
       setNewTaskError(null); // Clear error on success
       
       // Remove the page reload
-      // window.location.reload();
+      window.location.reload();
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to create task. Please try again.";
       setNewTaskError(errorMsg);
@@ -308,40 +309,30 @@ export default function Homepage() {
     }
   };
 
-  const handleSyncCalendar = async () => {
+  const handleSync = async () => {
+    setIsSyncing(true);
     try {
-      setIsLoading(true);
       const response = await fetch('http://localhost:8888/api/sync', {
         method: 'POST',
         credentials: 'include'
       });
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to sync tasks');
+        throw new Error('Failed to sync tasks');
       }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        toast({
-          title: "Success",
-          description: "Successfully synced and optimized your schedule!",
-        });
-        // Refresh the tasks after sync
-        await fetchTasks();
-      } else {
-        throw new Error(data.error || 'Sync failed');
-      }
+      await fetchTasks(); // Refresh tasks after sync
+      toast({
+        title: "Success",
+        description: "Tasks synced successfully!",
+      });
     } catch (error) {
-      console.error('Sync error:', error);
+      console.error('Error syncing tasks:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to sync tasks. Please try again.",
+        description: "Failed to sync tasks. Please try again.",
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setIsSyncing(false);
     }
   };
   
@@ -444,7 +435,13 @@ export default function Homepage() {
 
   const handleDeleteTask = async (taskIdToDelete: string) => {
     try {
-      const response = await fetch(`http://localhost:8888/api/tasks/${taskIdToDelete}`, {
+      // Find the task to get its raw_task_id
+      const taskToDelete = tasks.find(t => t.id === taskIdToDelete);
+      if (!taskToDelete) {
+        throw new Error('Task not found');
+      }
+
+      const response = await fetch(`http://localhost:8888/api/tasks/${taskToDelete.raw_task_id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -492,7 +489,7 @@ export default function Homepage() {
       });
 
       // Close modal if the deleted task was being viewed
-      if (selectedTaskForModal && selectedTaskForModal.raw_task_id === taskIdToDelete) {
+      if (selectedTaskForModal && selectedTaskForModal.id === taskIdToDelete) {
         handleCloseModal();
       }
     } catch (error) {
@@ -645,11 +642,20 @@ export default function Homepage() {
                 <Button 
                   variant="outline" 
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm whitespace-nowrap"
-                  onClick={handleSyncCalendar}
+                  onClick={handleSync}
+                  disabled={isSyncing}
                 >
-                  <Sync className="mr-2 h-4 w-4" /> 
-                  <span className="hidden sm:inline">Sync Calendar/Todoist</span>
-                  <span className="sm:hidden">Sync</span>
+                  {isSyncing ? (
+                    <div className="flex items-center gap-2">
+                      <Spinner className="h-4 w-4" />
+                      Syncing...
+                    </div>
+                  ) : (
+                    <>
+                      <Sync className="mr-2 h-4 w-4" />
+                      Sync Calendar
+                    </>
+                  )}
                 </Button> 
               </div>
             </div>

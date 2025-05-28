@@ -15,6 +15,8 @@ import { MapPin, CalendarDays, Edit3, Trash2, Info } from "lucide-react";
 import Map from './Map';
 import { useJsApiLoader } from '@react-google-maps/api';
 import React from 'react';
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/use-toast";
 
 interface TaskDetailModalProps {
   task: Task | null;
@@ -23,30 +25,32 @@ interface TaskDetailModalProps {
   onEdit: (task: Task) => void;
   onDelete: (taskId: string) => void;
   tasks: Task[];
+  homeAddress: string;
 }
 
-export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelete, tasks }: TaskDetailModalProps) {
+export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelete, tasks, homeAddress }: TaskDetailModalProps) {
   const [homeLatLng, setHomeLatLng] = React.useState<{ lat: number; lng: number } | null>(null);
   const [geocodingStatus, setGeocodingStatus] = React.useState<string>('');
+  const [isDeleting, setIsDeleting] = React.useState(false);
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: 'AIzaSyC_Dz0XtugoW2odkRb-QGaMT96bA0y9YJs',
     libraries: ['places'],
   });
 
   // Get home address from localStorage
-  const homeAddress = localStorage.getItem('calroute_home_address') || '';
+  const homeAddressFromStorage = localStorage.getItem('calroute_home_address') || '';
 
   React.useEffect(() => {
-    if (!isLoaded || !homeAddress) return;
+    if (!isLoaded || !homeAddressFromStorage) return;
     // Only geocode if first task
     const idx = tasks.findIndex(t => t.id === task?.id);
-    if (idx === 0 && homeAddress) {
+    if (idx === 0 && homeAddressFromStorage) {
       if (!window.google || !window.google.maps || !window.google.maps.Geocoder) {
         setGeocodingStatus('Error: Google Maps Geocoder not available');
         return;
       }
       const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ address: homeAddress }, (results, status) => {
+      geocoder.geocode({ address: homeAddressFromStorage }, (results, status) => {
         setGeocodingStatus(`Geocoding status: ${status}`);
         if (status === 'OK' && results && results[0]) {
           setHomeLatLng({
@@ -56,7 +60,7 @@ export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelet
         }
       });
     }
-  }, [isLoaded, homeAddress, task, tasks]);
+  }, [isLoaded, homeAddressFromStorage, task, tasks]);
 
   if (!task) return null;
 
@@ -65,14 +69,14 @@ export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelet
   let origin = '';
   let originLat = null, originLng = null;
   if (idx === 0) {
-    origin = homeAddress;
+    origin = homeAddressFromStorage;
     if (homeLatLng) {
       originLat = homeLatLng.lat;
       originLng = homeLatLng.lng;
     }
   } else if (idx > 0) {
     const prev = tasks[idx - 1];
-    origin = prev.locationAddress || prev.locationName || homeAddress;
+    origin = prev.locationAddress || prev.locationName || homeAddressFromStorage;
     originLat = prev.lat;
     originLng = prev.lng;
   }
@@ -99,10 +103,22 @@ export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelet
     onClose(); // Close modal after initiating edit, or keep open for an inline edit form
   };
 
-  const handleDelete = () => {
-    // console.log("Delete task:", task.raw_task_id);
-    onDelete(task.raw_task_id);
-    onClose(); // Close modal after delete
+  const handleDelete = async () => {
+    if (!task) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(task.id);
+      onClose();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete task. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -146,17 +162,38 @@ export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelet
           </div>
           <DialogFooter className="w-full mt-6 flex flex-col gap-2">
             <div className="flex flex-row gap-2 w-full">
-              <Button type="button" variant="outline" onClick={handleEdit} className="text-calroute-blue border-calroute-blue hover:bg-calroute-lightBlue hover:text-calroute-blue flex-1 flex justify-center items-center">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleEdit} 
+                disabled={isDeleting}
+                className="text-calroute-blue border-calroute-blue hover:bg-calroute-lightBlue hover:text-calroute-blue flex-1 flex justify-center items-center"
+              >
                 <Edit3 size={16} className="mr-2" />
                 Edit
               </Button>
-              <Button type="button" variant="destructive" onClick={handleDelete} className="flex-1 flex justify-center items-center">
-                <Trash2 size={16} className="mr-2" />
-                Delete
+              <Button 
+                type="button" 
+                variant="destructive" 
+                onClick={handleDelete} 
+                disabled={isDeleting}
+                className="flex-1 flex justify-center items-center"
+              >
+                {isDeleting ? (
+                  <div className="flex items-center gap-2">
+                    <Spinner className="h-4 w-4" />
+                    Deleting...
+                  </div>
+                ) : (
+                  <>
+                    <Trash2 size={16} className="mr-2" />
+                    Delete
+                  </>
+                )}
               </Button>
             </div>
             <DialogClose asChild>
-              <Button type="button" variant="outline" className="w-full">
+              <Button type="button" variant="outline" disabled={isDeleting} className="w-full">
                 Close
               </Button>
             </DialogClose>

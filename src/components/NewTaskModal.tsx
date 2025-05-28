@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MapPin, Clock, Info, Star } from 'lucide-react';
 import { Autocomplete } from '@react-google-maps/api';
 import { TimeWheelPicker } from "./ui/time-wheel-picker";
+import { Spinner } from "@/components/ui/spinner";
 
 interface NewTaskModalProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, t
   const [errors, setErrors] = useState<Partial<Record<keyof TaskData, string>>>({});
   const locationAutoRef = useRef<google.maps.places.Autocomplete | null>(null);
   const hasInitialized = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Populate form with initialData only when modal first opens
   useEffect(() => {
@@ -159,12 +161,23 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, t
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData, taskId);
-      // Do NOT call onClose() here; parent will close modal on success
-      // setFormData({ ... }); // Optionally reset form here if needed
+    setIsSubmitting(true);
+    try {
+      if (validateForm()) {
+        await onSubmit(formData, taskId);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error submitting task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save task. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -331,15 +344,24 @@ export default function NewTaskModal({ isOpen, onClose, onSubmit, initialData, t
               type="button"
               variant="outline"
               onClick={onClose}
+              disabled={isSubmitting}
               className="flex-1 border-gray-200 text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              disabled={isSubmitting}
               className="flex-1 bg-[rgb(0,74,173)] hover:bg-[rgb(93,224,230)] text-white"
             >
-              {taskId ? 'Update Task' : 'Add Task'}
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <Spinner className="h-4 w-4" />
+                  {taskId ? 'Updating...' : 'Adding...'}
+                </div>
+              ) : (
+                taskId ? 'Update Task' : 'Add Task'
+              )}
             </Button>
           </DialogFooter>
         </form>
