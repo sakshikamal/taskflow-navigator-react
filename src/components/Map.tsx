@@ -2,7 +2,7 @@
 import React, { useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer, InfoWindow } from '@react-google-maps/api';
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyC_Dz0XtugoW2odkRb-QGaMT96bA0y9YJs';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_MAPS_API_KEY;
 const libraries = ['places'] as const;
 
 interface MapProps {

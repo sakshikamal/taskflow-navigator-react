@@ -33,7 +33,7 @@ export default function TaskDetailModal({ task, isOpen, onClose, onEdit, onDelet
   const [geocodingStatus, setGeocodingStatus] = React.useState<string>('');
   const [isDeleting, setIsDeleting] = React.useState(false);
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: 'AIzaSyC_Dz0XtugoW2odkRb-QGaMT96bA0y9YJs',
+    googleMapsApiKey: import.meta.env.VITE_MAPS_API_KEY,
     libraries: ['places'],
   });
 

@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, X } from 'lucide-react';
 
 // It's highly recommended to move this key to a .env file
-const GOOGLE_MAPS_API_KEY = 'AIzaSyC_Dz0XtugoW2odkRb-QGaMT96bA0y9YJs';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_MAPS_API_KEY;
 const libraries: Libraries = ['places'];
 
 export default function Preferences() {
