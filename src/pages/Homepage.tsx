@@ -57,7 +57,7 @@ export default function Homepage() {
     if (!isAuthenticated) return;
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8888/api/tasks', {
+      const response = await fetch('https://calroute.online/api/tasks', {
         credentials: 'include'
       });
       if (!response.ok) {
@@ -111,7 +111,7 @@ export default function Homepage() {
   }, [isAuthenticated, toast]);
 
   useEffect(() => {
-    fetch('http://localhost:8888/api/pending_tasks', { credentials: 'include' })
+    fetch('https://calroute.online/api/pending_tasks', { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data.tasks && data.tasks.length > 0) {
@@ -154,7 +154,7 @@ export default function Homepage() {
     }
     // Call backend toggle API in background
     try {
-      const response = await fetch(`http://localhost:8888/api/tasks/${taskId}/toggle`, {
+      const response = await fetch(`https://calroute.online/api/tasks/${taskId}/toggle`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -239,7 +239,7 @@ export default function Homepage() {
         throw new Error("End time must be after start time");
       }
 
-      const response = await fetch('http://localhost:8888/api/tasks', {
+      const response = await fetch('https://calroute.online/api/tasks', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -314,7 +314,7 @@ export default function Homepage() {
   const handleSync = async () => {
     setIsSyncing(true);
     try {
-      const response = await fetch('http://localhost:8888/api/sync', {
+      const response = await fetch('https://calroute.online/api/sync', {
         method: 'POST',
         credentials: 'include'
       });
@@ -394,7 +394,7 @@ export default function Homepage() {
         }
       }
 
-      const response = await fetch(`http://localhost:8888/api/tasks/${taskToUpdate.raw_task_id}`, {
+      const response = await fetch(`https://calroute.online/api/tasks/${taskToUpdate.raw_task_id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -443,7 +443,7 @@ export default function Homepage() {
         throw new Error('Task not found');
       }
 
-      const response = await fetch(`http://localhost:8888/api/tasks/${taskToDelete.raw_task_id}`, {
+      const response = await fetch(`https://calroute.online/api/tasks/${taskToDelete.raw_task_id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -452,7 +452,7 @@ export default function Homepage() {
       }
 
       // Fetch fresh tasks from the backend to ensure we have the latest data
-      const tasksResponse = await fetch('http://localhost:8888/api/tasks', {
+      const tasksResponse = await fetch('https://calroute.online/api/tasks', {
         credentials: 'include'
       });
       if (!tasksResponse.ok) {
@@ -519,7 +519,7 @@ export default function Homepage() {
         navigator.geolocation.getCurrentPosition(resolve, reject);
       });
 
-      const response = await fetch("http://localhost:8888/api/dynamic_schedule", {
+      const response = await fetch("https://calroute.online/api/dynamic_schedule", {
         method: "POST",
         credentials: "include",
         headers: {

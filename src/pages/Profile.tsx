@@ -35,7 +35,7 @@ export default function Profile() {
     const fetchPreferences = async () => {
       try {
         console.log('Fetching preferences...');
-        const response = await fetch('http://localhost:8888/preferences', {
+        const response = await fetch('https://calroute.online/preferences', {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',

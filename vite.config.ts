@@ -11,24 +11,24 @@ export default defineConfig(({ mode }) => ({
     // ← Add this proxy block
     proxy: {
       // Proxy only the OAuth start endpoints and your /me endpoint:
-      // This makes http://localhost:8080/login/google  forward to  http://localhost:8888/login/google
+      // This makes https://calroute.online/login/google forward to https://calroute.online/login/google
       "/login/google": {
-        target: "http://localhost:8888",
+        target: "https://calroute.online",
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },
       "/login/todoist": {
-        target: "http://localhost:8888",
+        target: "https://calroute.online",
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },
       "/me": {
-        target: "http://localhost:8888",
+        target: "https://calroute.online",
         changeOrigin: true,
-        secure: false,
+        secure: true,
       },
       // If you have logout or other API paths, add them here:
-      // "/logout": { target: "http://localhost:8888", changeOrigin: true, secure: false },
+      // "/logout": { target: "https://calroute.online", changeOrigin: true, secure: true },
     },
   },
 

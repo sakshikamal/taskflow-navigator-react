@@ -27,7 +27,7 @@ export default function PendingTasksModal({ open, onClose, onTasksCompleted }: P
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    fetch('http://localhost:8888/api/pending_tasks', { credentials: 'include' })
+    fetch('https://calroute.online/api/pending_tasks', { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         setPendingTasks(data.tasks || []);
@@ -55,7 +55,7 @@ export default function PendingTasksModal({ open, onClose, onTasksCompleted }: P
     if (selected.size === 0) return;
     setSubmitting(true);
     try {
-      const response = await fetch('http://localhost:8888/api/complete_tasks', {
+      const response = await fetch('https://calroute.online/api/complete_tasks', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
