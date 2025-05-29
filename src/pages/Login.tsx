@@ -5,9 +5,9 @@ import { Navigate } from 'react-router-dom';
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
   
-  if (isAuthenticated) {
-    return <Navigate to="/homepage" replace />;
-  }
+  // if (isAuthenticated) {
+  //   return <Navigate to="/homepage" replace />;
+  // }
   
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -31,7 +31,7 @@ export default function Login() {
           </div>
           
           <div className="mt-8 flex flex-col items-center">
-            <Button 
+            <Button
               onClick={login}
               className="w-full max-w-xs bg-calroute-blue hover:bg-blue-600 text-white flex items-center justify-center gap-2 py-5 px-4 text-base"
             >

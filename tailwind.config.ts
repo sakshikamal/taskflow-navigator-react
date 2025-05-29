@@ -1,6 +1,8 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
-export default {
+/** @type {import('tailwindcss').Config} */
+const config = {
 	darkMode: ["class"],
 	content: [
 		"./pages/**/*.{ts,tsx}",
@@ -56,9 +58,9 @@ export default {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
 					active: 'hsl(var(--sidebar-active))',
-          'active-foreground': 'hsl(var(--sidebar-active-foreground))',
+					'active-foreground': 'hsl(var(--sidebar-active-foreground))',
 					hover: 'hsl(var(--sidebar-hover))',
-          'hover-foreground': 'hsl(var(--sidebar-hover-foreground))',
+					'hover-foreground': 'hsl(var(--sidebar-hover-foreground))',
 					border: 'hsl(var(--sidebar-border))', // If you need specific border for sidebar
 					ring: 'hsl(var(--sidebar-ring))'      // If you need specific ring for sidebar
 				},
@@ -109,5 +111,23 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		animate,
+		function({ addUtilities }: { addUtilities: any }) {
+			addUtilities({
+				'.scrollbar-hide': {
+					/* IE and Edge */
+					'-ms-overflow-style': 'none',
+					/* Firefox */
+					'scrollbar-width': 'none',
+					/* Safari and Chrome */
+					'&::-webkit-scrollbar': {
+						display: 'none'
+					}
+				}
+			})
+		}
+	],
 } satisfies Config;
+
+export default config;
